@@ -57,11 +57,24 @@ def Monster_attack[m in Monster] = _Monster_attack[Monster_id[m]]
 
 ic monsters_on_board_have_stats(m) {
     monster_pos(m, _,_) implies monster_dmg(m, _) and monster_typeid(m, _)
+        and monster_facing(m, _, _)
 }
+ic monster_facing_unit_vec(m,vx,vy) {
+        monster_facing(m, vx, vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
+}
+
 def monster_Type[m in monster] = Monster_by_id[monster_typeid[m]]
 
 def monster = m : monster_typeid(m, _)
 def monster_health[m in monster] = Monster_max_health[monster_Type[m]] - monster_dmg[m]
+
+
+// def monster_AI_move[m in monster] =
+//     def monster_facing
+
+
+
+
 
 // --- Game Positioning ---------------------------------------
 
@@ -131,16 +144,17 @@ def display_lines[row in range[1,screen_height,1], col in range[1,screen_width,1
 // === Updates
 // ============================================================
 
-def insert(:dummy) = true   //TODO(1898) remove after fixing issue #1898
-
-
-//def insert[:move] = (1, :up)
+//TODO(1898) remove after fixing issue #1898
+    def insert(:dummy) = true
+    def insert[:move] = (10000, :up)
+    def delete[:move] = (10000, :up)
+//
 
 def mv_vec = {
     :up,     0, 1;
     :down,   0,-1;
-    :left,   1, 1;
-    :right, -1, 1;
+    :left,  -1, 0;
+    :right,  1, 0;
 }
 def mv_dir = d : mv_vec(d,_,_)
 
