@@ -1,0 +1,128 @@
+// bound party_pos[]
+// Install an edb mapping party id to current position
+// def insert[:pc_pos] = init_pos
+
+/*  CSV Loading ... blech! ...
+
+def party_config_csv = load_csv["/Users/daly/Documents/work/rai/delve-code/game-config.csv"]
+//def Class(v...) = exists(pos: y[pos, :Class](v...))
+
+def party_config_csv_pos = pos : party_config_csv(pos, _...)
+
+//entity pc csv_pos_to_party =
+*/
+
+// --- Player Configs -------------------------
+
+entity pc pc_by_id = id : party_config(id, _,_,_,_)
+
+def party_config = {
+    1, "A", "Fighter", 1, 50;
+    2, "B", "Water Mage", 2, 30;
+    3, "C", "Archer", 3, 40;
+    4, "D", "Cleric", 4, 10;
+    5, "E", "Fire Mage", 5, 20;
+}
+def pc_name[p] = v : exists(id : pc_by_id(id,p) and party_config(id, v, _, _, _))
+def pc_class[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, v, _, _))
+def pc_init_order[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, _, v, _))
+def pc_max_health[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, _, _, v))
+
+def start_tile = 0,0
+def init_pos[p in pc] = (x-pc_init_order[p],y) from x,y where start_tile(x,y)
+
+// --- Monster Configs -------------------------
+
+def _Monster_health = {
+    1,     5;
+    2,    10;
+}
+def _Monster_attack = {
+    1,     3;
+    2,     5;
+}
+def _Monster_name = {
+    1,     "rat";
+    2,     "wolf";
+}
+entity Monster Monster_by_id = n from n where _Monster_health(n,_)
+def Monster_id(m,n) = Monster_by_id(n,m)
+
+def Monster_name[m in Monster] = _Monster_name[Monster_id[m]]
+def Monster_max_health[m in Monster] = _Monster_health[Monster_id[m]]
+def Monster_attack[m in Monster] = _Monster_attack[Monster_id[m]]
+
+//entity monster_instance
+// insert[:monster_position]
+
+ic monsters_on_board_have_stats(m) {
+    monster_pos(m, _,_) implies monster_dmg(m, _) and monster_typeid(m, _)
+}
+def monster_Type[m in monster] = Monster_by_id[monster_typeid[m]]
+
+def monster = m : monster_typeid(m, _)
+def monster_health[m in monster] = Monster_max_health[monster_Type[m]] - monster_dmg[m]
+
+// --- Game Positioning ---------------------------------------
+
+// Reverse index by tile - players, monster, etc
+// TODO: Once we have specialization this will work! :)
+// def tile_occupant[x,y] = p : pc[p] and pc_pos(p, x,y)
+// def tile_occupant[x,y] = m : monster[m] and monster_pos(m, x,y)
+
+def tile_occupant_pc[x,y] = p : pc[p] and pc_pos(p, x,y)
+def tile_occupant_monster[x,y] = m : monster[m] and monster_pos(m, x,y)
+
+// ------------------------------------------------------------
+
+// ============================================================
+// === UI Rendering
+// ============================================================
+
+// TODO: specialization
+// def pc_display_char[p in pc] = substring[pc_name[p], 1,1]
+// def Monster_display_char[m in Monster] = substring[Monster_name[m], 1,1]
+
+def pc_display_char = {
+    pc_by_id[1], '1';
+    pc_by_id[2], '2';
+    pc_by_id[3], '3';
+    pc_by_id[4], '4';
+    pc_by_id[5], '5';
+}
+def Monster_display_char = {
+    Monster_by_id[1], 'R';
+    Monster_by_id[2], 'W';
+}
+def monster_display_char[m] = Monster_display_char[monster_Type[m]]
+
+// TODO: Not constants
+def screen_dims = 11, 11 // Keep this odd
+def center = 0,0
+
+// TODO: Abstractions?
+def screen_width = v : screen_dims(v,_)
+def screen_height = v : screen_dims(_,v)
+def centerx = v : center(v,_)
+def centery = v : center(_,v)
+
+def L = centerx - screen_width ÷ 2
+def R = centerx + screen_width ÷ 2
+def T = centery + screen_height ÷ 2
+def B = centery - screen_height ÷ 2
+
+def display_grid[x in range[L,R,1], y in range[B,T,1]] =
+    if tile_occupant_pc(x,y,_) then pc_display_char[tile_occupant_pc[x,y]]
+    else if tile_occupant_monster(x,y,_) then monster_display_char[tile_occupant_monster[x,y]]
+    else '.'
+    end end
+
+// Flip y axis for printing characters!
+def display_lines[row in range[1,screen_height,1], col in range[1,screen_width,1]] =
+    display_grid[x, y]
+    from (x,y)
+    where x = L + col - 1 and y = T - row + 1
+
+
+// ------------------------------------------------------------
+
