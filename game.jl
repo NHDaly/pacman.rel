@@ -8,3 +8,4 @@ function print_grid(g)
         print(c,' ')
     end
 end
+
