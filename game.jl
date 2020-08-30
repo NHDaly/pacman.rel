@@ -16,6 +16,9 @@ function init_game(conn)
     query(conn, read("level1_characters.delvequery", String), readonly=false)
     query(conn, read("level1_environment.delvequery", String), readonly=false)
 
+    # NOTE: This must come _after_ the level is loaded for now, due to bug.
+    install_source(conn, path="updates.delve")
+
     @info "--initialized--"
     draw_frame(conn)
 end

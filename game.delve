@@ -50,25 +50,6 @@ def ghost(g) = ghost_name(g,_)
 
 
 
-// ---------------------------------------
-// Motion!
-
-//ic pacman_facing_is_unit_vec(vx,vy) {
-//    pacman_facing_x(vx) and pacman_facing_y(vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
-//        and vx != vy and (vx+vy = 1 or vx+vy = -1)
-//}
-//ic ghost_facing_is_unit_vec(g,vx,vy) {
-//    ghost_facing_x(g, vx) and ghost_facing_y(g, vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
-//        and vx != vy and (vx+vy = 1 or vx+vy = -1)
-//}
-
-
-
-// TODO: Stop at Walls
-def pacman_move_x = pacman_facing_x
-def pacman_move_y = pacman_facing_y
-
-
 
 
 // --- Game Positioning ---------------------------------------
@@ -129,42 +110,3 @@ def display_grid_topdown[display_x, display_y] =
 
 
 // ------------------------------------------------------------
-
-
-// ============================================================
-// === Updates
-// ============================================================
-
-// Moving Pacman based on controller input
-
-def computed_new_x_pacman = pacman_x + pacman_move_x
-def computed_new_y_pacman = pacman_y + pacman_move_y
-//def computed_new_ghost[g in ghost] = ghost_x[g] + ghost_move_x[g], ghost_y + ghost_move_y[g]
-
-// ***** On :tick, update positions ***********
-
-// Update positions based on pending moves.
-def delete[:pacman_x](v) = insert(:tick) and pacman_x(v)
-def delete[:pacman_y](v) = insert(:tick) and pacman_y(v)
-def insert[:pacman_x](v) = insert(:tick) and computed_new_x_pacman(v)
-def insert[:pacman_y](v) = insert(:tick) and computed_new_y_pacman(v)
-
-//// Delete pending moves.
-//def delete[:pacman_move_x](v...) = insert(:ptick) and pacman_move_x(v...)
-//def delete[:pacman_move_y](v...) = insert(:ptick) and pacman_move_y(v...)
-
-//def delete[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,_,_) and monster_pos(m,x,y)
-//def insert[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,x,y)
-
-
-// -- Eating! -------------------------------
-def delete[:dot](x,y) = dot(x,y) and pacman_x(x) and pacman_y(y)
-
-def delete[:superdot](x,y) = superdot(x,y) and pacman_x(x) and pacman_y(y)
-
-// Every time we delete a dot, add a point
-def insert[:score](v) = delete[:dot](_,_) and v = score+1.0
-def delete[:score](v) = delete[:dot](_,_) and score(v)
-
-def insert[:score](v) = delete[:superdot](_,_) and v = score+10.0
-def delete[:score](v) = delete[:superdot](_,_) and score(v)
