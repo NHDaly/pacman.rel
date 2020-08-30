@@ -29,7 +29,7 @@ function init_win()
             cy = ch / 2;
        </script>
         """)
-    return win
+    return win, msgchannel(win)
 end
 
 function display_grid!(win, g_width, g_height, ghost_colors, g)

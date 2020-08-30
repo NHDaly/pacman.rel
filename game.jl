@@ -5,7 +5,7 @@ using DelveSDK
 include("gamedisplay.jl")
 
 const conn = LocalConnection(;dbname=:pacman)
-win = init_win()
+win,ch = init_win()
 
 function init_game(conn)
     create_database(conn, overwrite=true)
@@ -34,4 +34,73 @@ end
 function update!(conn)
     query(conn, "def insert[:tick]=true", readonly=false)
 end
+
+const kUP=1; const kDOWN=2; const kLEFT=3; const kRIGHT=4
+function handle_input!(conn, arrow_key)
+    @info "input: $arrow_key"
+    q = """
+        def delete[:pacman_facing_x] = pacman_facing_x
+        def delete[:pacman_facing_y] = pacman_facing_y
+    """
+
+    @info if arrow_key == kUP
+        query(conn, q * """
+            def insert[:pacman_facing_x] = 0.0
+            def insert[:pacman_facing_y] = 1.0
+        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+    elseif arrow_key == kDOWN
+        query(conn, q * """
+            def insert[:pacman_facing_x] = 0.0
+            def insert[:pacman_facing_y] = -1.0
+        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+    elseif arrow_key == kLEFT
+        query(conn, q * """
+            def insert[:pacman_facing_x] = -1.0
+            def insert[:pacman_facing_y] = 0.0
+        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+    elseif arrow_key == kRIGHT
+        query(conn, q * """
+            def insert[:pacman_facing_x] = 1.0
+            def insert[:pacman_facing_y] = 0.0
+        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+    else
+        @error "UNEXPECTED arrow_key: $arrow_key"
+    end
+end
+function start_key_listener()
+    global kt = @async begin
+        while true
+            k = take!(ch)
+            handle_input!(conn, k)
+        end
+    end
+end
+start_key_listener()
+
+
+
+result = run(win, """
+    function keyDownHandler(event) {
+        console.log(event);
+        let UP = 1
+        let DOWN = 2
+        let LEFT = 3
+        let RIGHT = 4
+        if(event.keyCode == 39) {
+            sendMessageToJulia(RIGHT);
+        }
+        else if(event.keyCode == 37) {
+            sendMessageToJulia(LEFT);
+        }
+        if(event.keyCode == 40) {
+            sendMessageToJulia(DOWN);
+        }
+        else if(event.keyCode == 38) {
+            sendMessageToJulia(UP);
+        }
+    }
+    document.addEventListener('keydown', keyDownHandler, false);
+    """)
+
+
 init_game(conn)
