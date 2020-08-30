@@ -1,4 +1,5 @@
 // TODO: need this to make inserts work
+// TODO(1898) remove after fixing issue #1898
 def insert[:dummy] = true
 
 // --- Ghost Configs -------------------------
@@ -129,47 +130,41 @@ def display_grid_topdown[display_x, display_y] =
 
 // ------------------------------------------------------------
 
-/*
-
 
 // ============================================================
 // === Updates
 // ============================================================
 
-//TODO(1898) remove after fixing issue #1898
-    def insert(:dummy) = true
-    def insert[:move] = (10000, :up)
-    def delete[:move] = (10000, :up)
-//
+// Moving Pacman based on controller input
 
-def mv_vec = {
-    :up,     0, 1;
-    :down,   0,-1;
-    :left,  -1, 0;
-    :right,  1, 0;
-}
-def mv_dir = d : mv_vec(d,_,_)
+def computed_new_x_pacman = pacman_x + pacman_move_x
+def computed_new_y_pacman = pacman_y + pacman_move_y
+//def computed_new_ghost[g in ghost] = ghost_x[g] + ghost_move_x[g], ghost_y + ghost_move_y[g]
 
-@inline def vadd[A, B] = (px+vx, py+vy) from px,py, vx,vy where A(px,py) and B(vx,vy)
-
-def computed_new_pos[p in pc] = vadd[pc_pos[p], mv_vec[d]] from id,d where move(id,d) and pc_by_id[id](p)
-
-def computed_new_monster_pos[m in monster] = vadd[monster_pos[m], monster_AI_move[m]]
-
-
-// ***** On :tick, update everything ***********
-// TODO: Need different ticks until specialization is done
-// TODO: NVM this doesn't work either. i just need to either wait for specialization, or make players and monsters have the same type.
+// ***** On :tick, update positions ***********
 
 // Update positions based on pending moves.
-def delete[:pc_pos](p, x,y) = insert(:ptick) and computed_new_pos(p,_,_) and pc_pos(p,x,y)
-def insert[:pc_pos](p, x,y) = insert(:ptick) and computed_new_pos(p,x,y)
+def delete[:pacman_x](v) = insert(:tick) and pacman_x(v)
+def delete[:pacman_y](v) = insert(:tick) and pacman_y(v)
+def insert[:pacman_x](v) = insert(:tick) and computed_new_x_pacman(v)
+def insert[:pacman_y](v) = insert(:tick) and computed_new_y_pacman(v)
 
-// Delete pending moves.
-def delete[:move](v...) = insert(:ptick) and move(v...)
+//// Delete pending moves.
+//def delete[:pacman_move_x](v...) = insert(:ptick) and pacman_move_x(v...)
+//def delete[:pacman_move_y](v...) = insert(:ptick) and pacman_move_y(v...)
 
-def delete[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,_,_) and monster_pos(m,x,y)
-def insert[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,x,y)
+//def delete[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,_,_) and monster_pos(m,x,y)
+//def insert[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,x,y)
 
 
-*/
+// -- Eating! -------------------------------
+def delete[:dot](x,y) = dot(x,y) and pacman_x(x) and pacman_y(y)
+
+def delete[:superdot](x,y) = superdot(x,y) and pacman_x(x) and pacman_y(y)
+
+// Every time we delete a dot, add a point
+def insert[:score](v) = delete[:dot](_,_) and v = score+1.0
+def delete[:score](v) = delete[:dot](_,_) and score(v)
+
+def insert[:score](v) = delete[:superdot](_,_) and v = score+10.0
+def delete[:score](v) = delete[:superdot](_,_) and score(v)

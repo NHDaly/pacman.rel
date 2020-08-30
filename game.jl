@@ -28,4 +28,7 @@ function draw_frame(conn)
     global ghost_colors = Dict(query(conn, out=:ghost_color))
     display_grid!(win, w,h, ghost_colors, g)
 end
+function update!(conn)
+    query(conn, "def insert[:tick]=true", readonly=false)
+end
 init_game(conn)

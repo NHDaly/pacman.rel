@@ -7,7 +7,7 @@ def insert[:grid_h] = _grid_h
 
 
 // Install edbs for pacman pos
-def insert[:pacman_x] = 14.5
+def insert[:pacman_x] = 14.0
 def insert[:pacman_y] = 8.0
 
 // All the ghosts start in the middle
@@ -26,3 +26,8 @@ def insert[:pacman_facing_y] = 0.0
 def insert[:ghost_facing_x][g in ghost] = 0.0
 def insert[:ghost_facing_y][g in ghost] = 1.0
 
+
+
+// Score Keeping
+def delete[:score] = score
+def insert[:score] = 0.0
