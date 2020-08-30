@@ -43,7 +43,7 @@ function handle_input!(conn, arrow_key)
         def delete[:pacman_facing_y] = pacman_facing_y
     """
 
-    @info if arrow_key == kUP
+    if arrow_key == kUP
         query(conn, q * """
             def insert[:pacman_facing_x] = 0.0
             def insert[:pacman_facing_y] = 1.0
@@ -71,7 +71,8 @@ function start_key_listener()
     global kt = @async begin
         while true
             k = take!(ch)
-            handle_input!(conn, k)
+            # Multiple writes may simply fail, but that's fine! :)
+            Threads.@spawn handle_input!(conn, k)
         end
     end
 end

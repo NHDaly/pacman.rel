@@ -104,8 +104,8 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
 
             let cellw = cw / $g_width;
 
-            pellet_radius = cellw * 0.1;
-            superdot_radius = cellw * 0.5;
+            pellet_radius = cellw * 0.15;
+            superdot_radius = cellw * 0.4;
             pacman_radius = cellw * 0.5;
             ghost_radius = cellw * 2.0;
 

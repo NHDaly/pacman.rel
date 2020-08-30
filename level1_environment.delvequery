@@ -17,8 +17,8 @@ def _wall = x,1.0    from x in xs
 def _wall = x,grid_h from x in xs
 
 // Left and Right columns are all walls except tunnel
-def _wall = 1.0,y    from y in ys where not 16.0 = y // {10;11;12;13;16;18;19;20}(y)
-def _wall = grid_w,y from y in ys where not 16.0 = y // {10;11;12;13;16;18;19;20}(y)
+def _wall = 1.0,y    from y in ys where not 17.0 = y
+def _wall = grid_w,y from y in ys where not 17.0 = y
 
 def grid_w_i = float_int_convert[grid_w]
 def grid_h_i = float_int_convert[grid_h]

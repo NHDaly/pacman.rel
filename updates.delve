@@ -25,8 +25,8 @@ def pacman_move_y = pacman_facing_y
 
 // Moving Pacman based on controller input
 
-def computed_new_x_pacman = pacman_x + pacman_move_x
-def computed_new_y_pacman = pacman_y + pacman_move_y
+def computed_new_x_pacman = ((pacman_x + pacman_move_x - 1.0) % grid_w) + 1.0
+def computed_new_y_pacman = ((pacman_y + pacman_move_y - 1.0) % grid_h) + 1.0
 //def computed_new_ghost[g in ghost] = ghost_x[g] + ghost_move_x[g], ghost_y + ghost_move_y[g]
 
 def valid_move_pacman =
