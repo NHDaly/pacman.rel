@@ -1,0 +1,83 @@
+// TODO: Use ints for dots x,y
+
+def xs = range[1.0, grid_w, 1.0]
+def ys = range[1.0, grid_h, 1.0]
+//def cell(x,y) = xs(x) and ys(y)
+
+def _superdot = {
+    2.0, 28.0   ;
+    27.0, 28.0  ;
+    2.0, 8.0    ;
+    27.0, 8.0   ;
+}
+
+
+// Top and Bottom rows are all walls
+def _wall = x,1.0    from x in xs
+def _wall = x,grid_h from x in xs
+
+// Left and Right columns are all walls except tunnel
+def _wall = 1.0,y    from y in ys where not 16.0 = y // {10;11;12;13;16;18;19;20}(y)
+def _wall = grid_w,y from y in ys where not 16.0 = y // {10;11;12;13;16;18;19;20}(y)
+
+def grid_w_i = float_int_convert[grid_w]
+def grid_h_i = float_int_convert[grid_h]
+
+// Just do the left half
+def _wall_i_left = {
+    // Tunnels
+    ( {1;2;3;4;5;6}, {18;19;20;21;22} );
+    ( {1;2;3;4;5;6}, {12;13;14;15;16} );
+
+    // Bumps
+    (2,6); (2,7);
+    (3,6); (3,7);
+
+    // Inside squares
+    (range[3,12,1] , {3;4});
+    ({8;9} , range[5,7,1]);
+
+    ({    5;6} , {6;7;8;9});
+    ({3;4;5;6} , {    9;10});
+
+    // (stop halfway on this one)
+    (range[11,14,1] , {6;7});
+    ({14} , range[3,7,1]);
+}
+
+def _wall_i(x,y) = _wall_i_left(x,y) or _wall_i_left(grid_w_i-x+1, y)
+
+def _wall = int_float_convert[x], int_float_convert[y] from (x,y) where _wall_i(x,y)
+
+// clear any old environments if they already exist
+def delete[:wall] = wall
+def delete[:superdot] = superdot
+def delete[:dot] = dot
+
+// Insert new ones
+def insert[:superdot] = _superdot
+def insert[:wall] = _wall
+
+//def
+
+def insert[:dot](x,y) =
+    range[1.0,grid_w,1.0](x) and range[1.0,grid_h,1.0](y)
+    and not _wall(x,y)
+    and not _superdot(x, y)
+
+    // Note that this is comparing against their initial positions, so the characters must
+    // be initialized first.
+    // Not any of the squares around pacman:
+    and not exists(px,py :
+            pacman_x(px) and pacman_y(py)
+            and px > x - 1.0 and px < x + 1.0
+            and py > y - 1.0 and py < y + 1.0
+        )
+    // // Not any of the squares around ghosts
+    // and not exists(g, gx,gy :
+    //         ghost(g) and
+    //         ghost_x[g](gx) and ghost_y[g](gy)
+    //         and gx > x - 2.0 and gx < x + 2.0
+    //         and gy > y - 2.0 and gy < y + 2.0
+    //     )
+

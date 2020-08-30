@@ -1,16 +1,6 @@
 // TODO: need this to make inserts work
 def insert[:dummy] = true
 
-def grid_h = 29.0
-def grid_w = 26.0
-
-// Install edbs for pacman pos
-def insert[:pacman_x](x) = insert(:init) and x=pacman_init_x
-def insert[:pacman_y](y) = insert(:init) and y=pacman_init_y
-
-def pacman_init_x = 13.5
-def pacman_init_y = 6.0
-
 // --- Ghost Configs -------------------------
 
 // From https://en.wikipedia.org/wiki/Ghosts_(Pac-Man)#Known_ghosts
@@ -29,91 +19,24 @@ def ghost_color = {
 
 def ghost(g) = ghost_name(g,_)
 
-// All the ghosts start in the middle
-def insert[:ghost_x][g in ghost](x) = insert(:init) and x = ghost_init_x - (g-2.5)
-def insert[:ghost_y][g in ghost](y) = insert(:init) and y = ghost_init_y
-
-def ghost_init_x = 13.5
-def ghost_init_y = grid_h/2.0
-
-
 // TODO: Couldn't RAIVM w/ existentials for x,y. Is this broken?
 // TODO: Can't RAIVM these together. Is this broken?
 // ic all_ghosts_on_board(g) {
 //     (ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1) from x) and
 //     (ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1) from y)
 // }
-ic all_ghosts_on_board_x(g,x) {
-    ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1)
-}
-ic all_ghosts_on_board_y(g,y) {
-    ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
-}
+// ic all_ghosts_on_board_x(g,x) {
+//     ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1)
+// }
+// ic all_ghosts_on_board_y(g,y) {
+//     ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
+// }
 
 // ---- Walls and Dots --------
 
 // Walls and dots should be loaded via CSV. They're initialized here just to make things work.
 //def insert[:walls_csv](x,y) = insert(:init) and x=0.0 and y=0.0
 //def insert[:superdots_csv](x,y) = insert(:init) and x=0.0 and y=0.0
-
-// TODO: CSV stuff not working ... blech
-// // schema mapping
-// def wall(x,y) = walls_csv(p, :x, x) and walls_csv(p, :y, y) from p
-
-// TODO: Specialization by types: Could be inserting `(x,y)` directly into :superdot and
-// :dot, but right now `insert$3` must be `Symbol, Int, Float`.
-// This makes this _way_ more complex than it needs to be. :(
-
-// entity dot_id dot_from_xy = {}
-//
-// // Fill in the rest of the grid with regular dots at the start of the level!
-// // (Since dots can change, these need to be EDBs)
-// def insert[:dot_x](d, x) = insert(:init) and
-//     exists(y :
-//         range[0.0,grid_w,1.0](x) and range[0.0,grid_h,1.0](y) and
-//         d = dot_from_xy(x,y) and
-//         not wall(x,y)
-//     )
-// def insert[:dot_y](d, y) = insert(:init) and
-//     exists(x :
-//         range[0.0,grid_w,1.0](x) and range[0.0,grid_h,1.0](y) and
-//         d = dot_from_xy(x,y) and
-//         not wall(x,y)
-//     )
-//
-// def dot(x, y) = dot_x(d, x) and dot_y(d, y) from d
-
-// TODO: Specialization by type: Note that this is accidentally forcing type `Int=>Float`,
-// even though we really do want this to be `(Float,Float)`. But it's okay, because we'll
-// convert it at the end, and I _think_ these will always sit on a whole number anyway :shrug:
-
-// NOTE: We need this separate definition to allow the type promotion
-def _init_dot_not_wall(x,y) =
-    range[1.0,grid_w,1.0](x) and range[1.0,grid_h,1.0](y)
-    and not wall(x,y)
-
-// Must take care to create `insert$3(RelName, Int, Float)` for the other insertions
-def insert[:dot](x,y) = insert(:init) and
-    exists(x_float :
-        _init_dot_not_wall(x_float, y)
-        and x = float_int_convert[x_float]
-        // Note that for all the things that can change, we need to check whether they're being
-        // inserted _this transaction_.
-        and not insert[:superdot](x, y)
-        // Not any of the squares around pacman
-        and not exists(px,py :
-                insert[:pacman_x](px) and insert[:pacman_y](py)
-                and px > x_float - 1.0 and px < x_float + 1.0
-                and py > y       - 1.0 and py < y       + 1.0
-            )
-        // Not any of the squares around ghosts
-        and not exists(g, gx,gy :
-                ghost(g) and
-                insert[:ghost_x][g](gx) and insert[:ghost_y][g](gy)
-                and gx > x_float - 2.0 and gx < x_float + 2.0
-                and gy > y       - 2.0 and gy < y       + 2.0
-            )
-    )
 
 
 /*
@@ -123,7 +46,6 @@ def insert[:dot](x,y) = insert(:init) and
             (i = 2 or i = -2 or j = 2 or j = -2)
         )
 */
-
 
 
 
@@ -138,13 +60,6 @@ def insert[:dot](x,y) = insert(:init) and
 //    ghost_facing_x(g, vx) and ghost_facing_y(g, vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
 //        and vx != vy and (vx+vy = 1 or vx+vy = -1)
 //}
-
-// TODO: Specialization: this doesn't need to be a float
-def insert[:pacman_facing_x](vx) = insert(:init) and vx=1.0
-def insert[:pacman_facing_y](vy) = insert(:init) and vy=0.0
-
-def insert[:ghost_facing_x][g in ghost](vx) = insert(:init) and vx=0.0
-def insert[:ghost_facing_y][g in ghost](vy) = insert(:init) and vy=1.0
 
 
 
@@ -187,9 +102,7 @@ def ghost_display_char = {
 def display_grid[x, y](c) =
     tile_occupant_pacman(x,y) and pacman_display_char(c)
         or (tile_occupant_ghost(x,y,g) and ghost_display_char[g](c) from g in ghost)
-        // TODO: Specialization by types - dot forced to (Int,Float)
-        or exists(x_int :
-            dot(x_int,y) and x=int_float_convert[x_int]) and c='.'
+        or dot(x,y) and c='.'
         or superdot(x,y) and c='*'
         or wall(x,y) and c='W'
 
