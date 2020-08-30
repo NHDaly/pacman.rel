@@ -1,77 +1,156 @@
-// bound party_pos[]
-// Install an edb mapping party id to current position
-// def insert[:pc_pos] = init_pos
+// TODO: need this to make inserts work
+def insert[:dummy] = true
 
-/*  CSV Loading ... blech! ...
+def grid_h = 29.0
+def grid_w = 26.0
 
-def party_config_csv = load_csv["/Users/daly/Documents/work/rai/delve-code/game-config.csv"]
-//def Class(v...) = exists(pos: y[pos, :Class](v...))
+// Install edbs for pacman pos
+def insert[:pacman_x](x) = insert(:init) and x=pacman_init_x
+def insert[:pacman_y](y) = insert(:init) and y=pacman_init_y
 
-def party_config_csv_pos = pos : party_config_csv(pos, _...)
+def pacman_init_x = 13.5
+def pacman_init_y = 6.0
 
-//entity pc csv_pos_to_party =
+// --- Ghost Configs -------------------------
+
+// From https://en.wikipedia.org/wiki/Ghosts_(Pac-Man)#Known_ghosts
+def ghost_name = {
+    1, "Blinky";  // Chaser
+    2, "Pinky";   // Ambusher
+    3, "Inky";    // Fickle
+    4, "Clide";   // Feigned Ignorance
+}
+def ghost_color = {
+    1, "red";
+    2, "pink";
+    3, "cyan";
+    4, "orange";
+}
+
+def ghost(g) = ghost_name(g,_)
+
+// All the ghosts start in the middle
+def insert[:ghost_x][g in ghost](x) = insert(:init) and x = ghost_init_x - (g-2.5)
+def insert[:ghost_y][g in ghost](y) = insert(:init) and y = ghost_init_y
+
+def ghost_init_x = 13.5
+def ghost_init_y = grid_h/2.0
+
+
+// TODO: Couldn't RAIVM w/ existentials for x,y. Is this broken?
+// TODO: Can't RAIVM these together. Is this broken?
+// ic all_ghosts_on_board(g) {
+//     (ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1) from x) and
+//     (ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1) from y)
+// }
+ic all_ghosts_on_board_x(g,x) {
+    ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1)
+}
+ic all_ghosts_on_board_y(g,y) {
+    ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
+}
+
+// ---- Walls and Dots --------
+
+// Walls and dots should be loaded via CSV. They're initialized here just to make things work.
+//def insert[:walls_csv](x,y) = insert(:init) and x=0.0 and y=0.0
+//def insert[:superdots_csv](x,y) = insert(:init) and x=0.0 and y=0.0
+
+// TODO: CSV stuff not working ... blech
+// // schema mapping
+// def wall(x,y) = walls_csv(p, :x, x) and walls_csv(p, :y, y) from p
+
+// TODO: Specialization by types: Could be inserting `(x,y)` directly into :superdot and
+// :dot, but right now `insert$3` must be `Symbol, Int, Float`.
+// This makes this _way_ more complex than it needs to be. :(
+
+// entity dot_id dot_from_xy = {}
+//
+// // Fill in the rest of the grid with regular dots at the start of the level!
+// // (Since dots can change, these need to be EDBs)
+// def insert[:dot_x](d, x) = insert(:init) and
+//     exists(y :
+//         range[0.0,grid_w,1.0](x) and range[0.0,grid_h,1.0](y) and
+//         d = dot_from_xy(x,y) and
+//         not wall(x,y)
+//     )
+// def insert[:dot_y](d, y) = insert(:init) and
+//     exists(x :
+//         range[0.0,grid_w,1.0](x) and range[0.0,grid_h,1.0](y) and
+//         d = dot_from_xy(x,y) and
+//         not wall(x,y)
+//     )
+//
+// def dot(x, y) = dot_x(d, x) and dot_y(d, y) from d
+
+// TODO: Specialization by type: Note that this is accidentally forcing type `Int=>Float`,
+// even though we really do want this to be `(Float,Float)`. But it's okay, because we'll
+// convert it at the end, and I _think_ these will always sit on a whole number anyway :shrug:
+
+// NOTE: We need this separate definition to allow the type promotion
+def _init_dot_not_wall(x,y) =
+    range[1.0,grid_w,1.0](x) and range[1.0,grid_h,1.0](y)
+    and not wall(x,y)
+
+// Must take care to create `insert$3(RelName, Int, Float)` for the other insertions
+def insert[:dot](x,y) = insert(:init) and
+    exists(x_float :
+        _init_dot_not_wall(x_float, y)
+        and x = float_int_convert[x_float]
+        // Note that for all the things that can change, we need to check whether they're being
+        // inserted _this transaction_.
+        and not insert[:superdot](x, y)
+        // Not any of the squares around pacman
+        and not exists(px,py :
+                insert[:pacman_x](px) and insert[:pacman_y](py)
+                and px > x_float - 1.0 and px < x_float + 1.0
+                and py > y       - 1.0 and py < y       + 1.0
+            )
+        // Not any of the squares around ghosts
+        and not exists(g, gx,gy :
+                ghost(g) and
+                insert[:ghost_x][g](gx) and insert[:ghost_y][g](gy)
+                and gx > x_float - 2.0 and gx < x_float + 2.0
+                and gy > y       - 2.0 and gy < y       + 2.0
+            )
+    )
+
+
+/*
+    // Start with a box around the ghosts
+    exists(i,j : {-2.0,-1.0,0.0,1.0,2.0}(i) and {-2.0,-1.0,0.0,1.0,2.0}(j) and
+        (grid_w/2.0 + i)(x) and (grid_h/2.0 + j)(y) and
+            (i = 2 or i = -2 or j = 2 or j = -2)
+        )
 */
 
-// --- Player Configs -------------------------
-
-entity pc pc_by_id = id : party_config(id, _,_,_,_)
-
-def party_config = {
-    1, "A", "Fighter", 1, 50;
-    2, "B", "Water Mage", 2, 30;
-    3, "C", "Archer", 3, 40;
-    4, "D", "Cleric", 4, 10;
-    5, "E", "Fire Mage", 5, 20;
-}
-def pc_name[p] = v : exists(id : pc_by_id(id,p) and party_config(id, v, _, _, _))
-def pc_class[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, v, _, _))
-def pc_init_order[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, _, v, _))
-def pc_max_health[p] = v : exists(id : pc_by_id(id,p) and party_config(id, _, _, _, v))
-
-def start_tile = 0,0
-def init_pos[p in pc] = (x-pc_init_order[p],y) from x,y where start_tile(x,y)
-
-// --- Monster Configs -------------------------
-
-def _Monster_health = {
-    1,     5;
-    2,    10;
-}
-def _Monster_attack = {
-    1,     3;
-    2,     5;
-}
-def _Monster_name = {
-    1,     "rat";
-    2,     "wolf";
-}
-entity Monster Monster_by_id = n from n where _Monster_health(n,_)
-def Monster_id(m,n) = Monster_by_id(n,m)
-
-def Monster_name[m in Monster] = _Monster_name[Monster_id[m]]
-def Monster_max_health[m in Monster] = _Monster_health[Monster_id[m]]
-def Monster_attack[m in Monster] = _Monster_attack[Monster_id[m]]
-
-//entity monster_instance
-// insert[:monster_position]
-
-ic monsters_on_board_have_stats(m) {
-    monster_pos(m, _,_) implies monster_dmg(m, _) and monster_typeid(m, _)
-        and monster_facing(m, _, _)
-}
-ic monster_facing_unit_vec(m,vx,vy) {
-        monster_facing(m, vx, vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
-}
-
-def monster_Type[m in monster] = Monster_by_id[monster_typeid[m]]
-
-def monster = m : monster_typeid(m, _)
-def monster_health[m in monster] = Monster_max_health[monster_Type[m]] - monster_dmg[m]
 
 
-// def monster_AI_move[m in monster] =
-//     def monster_facing
 
+// ---------------------------------------
+// Motion!
+
+//ic pacman_facing_is_unit_vec(vx,vy) {
+//    pacman_facing_x(vx) and pacman_facing_y(vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
+//        and vx != vy and (vx+vy = 1 or vx+vy = -1)
+//}
+//ic ghost_facing_is_unit_vec(g,vx,vy) {
+//    ghost_facing_x(g, vx) and ghost_facing_y(g, vy) implies {-1;0;1}(vx) and {-1;0;1}(vy)
+//        and vx != vy and (vx+vy = 1 or vx+vy = -1)
+//}
+
+// TODO: Specialization: this doesn't need to be a float
+def insert[:pacman_facing_x](vx) = insert(:init) and vx=1.0
+def insert[:pacman_facing_y](vy) = insert(:init) and vy=0.0
+
+def insert[:ghost_facing_x][g in ghost](vx) = insert(:init) and vx=0.0
+def insert[:ghost_facing_y][g in ghost](vy) = insert(:init) and vy=1.0
+
+
+
+// TODO: Stop at Walls
+def pacman_move_x = pacman_facing_x
+def pacman_move_y = pacman_facing_y
 
 
 
@@ -80,11 +159,11 @@ def monster_health[m in monster] = Monster_max_health[monster_Type[m]] - monster
 
 // Reverse index by tile - players, monster, etc
 // TODO: Once we have specialization this will work! :)
-// def tile_occupant[x,y] = p : pc[p] and pc_pos(p, x,y)
-// def tile_occupant[x,y] = m : monster[m] and monster_pos(m, x,y)
+// def tile_occupant[x,y] = p : pacman[p] and pacman_pos(p, x,y)
+// def tile_occupant[x,y] = m : ghost[m] and ghost_pos(m, x,y)
 
-def tile_occupant_pc[x,y] = p : pc[p] and pc_pos(p, x,y)
-def tile_occupant_monster[x,y] = m : monster[m] and monster_pos(m, x,y)
+def tile_occupant_pacman(x,y) = pacman_x(x) and pacman_y(y)
+def tile_occupant_ghost[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
 
 // ------------------------------------------------------------
 
@@ -92,52 +171,52 @@ def tile_occupant_monster[x,y] = m : monster[m] and monster_pos(m, x,y)
 // === UI Rendering
 // ============================================================
 
-// TODO: specialization
+// TODO: Extracting characters from strings
 // def pc_display_char[p in pc] = substring[pc_name[p], 1,1]
-// def Monster_display_char[m in Monster] = substring[Monster_name[m], 1,1]
+//def ghost_display_char[g in ghost] = substring[ghost_name[g], 1,1]
 
-def pc_display_char = {
-    pc_by_id[1], '1';
-    pc_by_id[2], '2';
-    pc_by_id[3], '3';
-    pc_by_id[4], '4';
-    pc_by_id[5], '5';
+
+def pacman_display_char = 'P'  // Sad, Delve rejected 'ᗧ'
+def ghost_display_char = {
+    1, '1';
+    2, '2';
+    3, '3';
+    4, '4';
 }
-def Monster_display_char = {
-    Monster_by_id[1], 'R';
-    Monster_by_id[2], 'W';
-}
-def monster_display_char[m] = Monster_display_char[monster_Type[m]]
 
-// TODO: Not constants
-def screen_dims = 11, 11 // Keep this odd
-def center = 0,0
-
-// TODO: Abstractions?
-def screen_width = v : screen_dims(v,_)
-def screen_height = v : screen_dims(_,v)
-def centerx = v : center(v,_)
-def centery = v : center(_,v)
-
-def L = centerx - screen_width ÷ 2
-def R = centerx + screen_width ÷ 2
-def T = centery + screen_height ÷ 2
-def B = centery - screen_height ÷ 2
-
-def display_grid[x in range[L,R,1], y in range[B,T,1]] =
-    if tile_occupant_pc(x,y,_) then pc_display_char[tile_occupant_pc[x,y]]
-    else if tile_occupant_monster(x,y,_) then monster_display_char[tile_occupant_monster[x,y]]
-    else '.'
-    end end
+def display_grid[x, y](c) =
+    tile_occupant_pacman(x,y) and pacman_display_char(c)
+        or (tile_occupant_ghost(x,y,g) and ghost_display_char[g](c) from g in ghost)
+        // TODO: Specialization by types - dot forced to (Int,Float)
+        or exists(x_int :
+            dot(x_int,y) and x=int_float_convert[x_int]) and c='.'
+        or superdot(x,y) and c='*'
+        or wall(x,y) and c='W'
 
 // Flip y axis for printing characters!
-def display_lines[row in range[1,screen_height,1], col in range[1,screen_width,1]] =
+def display_grid_topdown[display_x, display_y] =
     display_grid[x, y]
     from (x,y)
-    where x = L + col - 1 and y = T - row + 1
+    where display_x = x and display_y = grid_h - y + 1
+
+
+// Old version where i was printing the whole grid as a block in delve
+//def display_grid[x in range[L,R,1], y in range[B,T,1]] =
+//    if tile_occupant_pacman(x,y) then pacman_display_char
+//    else if tile_occupant_ghost(x,y,_) then ghost_display_char[tile_occupant_ghost[x,y]]
+//    else '.'
+//    end end
+//
+//// Flip y axis for printing characters!
+//def display_lines[row in range[1,screen_height,1], col in range[1,screen_width,1]] =
+//    display_grid[x, y]
+//    from (x,y)
+//    where x = L + col - 1 and y = T - row + 1
 
 
 // ------------------------------------------------------------
+
+/*
 
 
 // ============================================================
@@ -162,13 +241,22 @@ def mv_dir = d : mv_vec(d,_,_)
 
 def computed_new_pos[p in pc] = vadd[pc_pos[p], mv_vec[d]] from id,d where move(id,d) and pc_by_id[id](p)
 
+def computed_new_monster_pos[m in monster] = vadd[monster_pos[m], monster_AI_move[m]]
+
 
 // ***** On :tick, update everything ***********
+// TODO: Need different ticks until specialization is done
+// TODO: NVM this doesn't work either. i just need to either wait for specialization, or make players and monsters have the same type.
 
 // Update positions based on pending moves.
-def delete[:pc_pos](p, x,y) = insert(:tick) and computed_new_pos(p,_,_) and pc_pos(p,x,y)
-def insert[:pc_pos](p, x,y) = insert(:tick) and computed_new_pos(p,x,y)
+def delete[:pc_pos](p, x,y) = insert(:ptick) and computed_new_pos(p,_,_) and pc_pos(p,x,y)
+def insert[:pc_pos](p, x,y) = insert(:ptick) and computed_new_pos(p,x,y)
 
 // Delete pending moves.
-def delete[:move](v...) = insert(:tick) and move(v...)
+def delete[:move](v...) = insert(:ptick) and move(v...)
 
+def delete[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,_,_) and monster_pos(m,x,y)
+def insert[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,x,y)
+
+
+*/
