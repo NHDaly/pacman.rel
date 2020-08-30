@@ -57,7 +57,7 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
             """
         elseif c == 'W'
             """
-            ctx.fillStyle = "white";
+            ctx.fillStyle = "darkblue";
             ctx.fillRect(x-cellw/2, y-cellw/2, cellw, cellw);
             """
         elseif c == 'P'

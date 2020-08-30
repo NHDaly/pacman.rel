@@ -42,12 +42,8 @@ def delete[:pacman_y](v) = insert(:tick) and valid_move_pacman() and pacman_y(v)
 def insert[:pacman_x](v) = insert(:tick) and valid_move_pacman() and computed_new_x_pacman(v)
 def insert[:pacman_y](v) = insert(:tick) and valid_move_pacman() and computed_new_y_pacman(v)
 
-//// Delete pending moves.
-//def delete[:pacman_move_x](v...) = insert(:ptick) and pacman_move_x(v...)
-//def delete[:pacman_move_y](v...) = insert(:ptick) and pacman_move_y(v...)
-
-//def delete[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,_,_) and monster_pos(m,x,y)
-//def insert[:monster_pos](m, x,y) = insert(:mtick) and computed_new_monster_pos(m,x,y)
+//def delete[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,_,_) and ghost_pos(m,x,y)
+//def insert[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,x,y)
 
 
 // -- Eating! -------------------------------

@@ -40,9 +40,39 @@ def _wall_i_left = {
     ({    5;6} , {6;7;8;9});
     ({3;4;5;6} , {    9;10});
 
-    // (stop halfway on this one)
+    (range[8,12,1], {9;10});
+
+    // Center T (stop halfway on this one)
     (range[11,14,1] , {6;7});
     ({14} , range[3,7,1]);
+
+    // Center T (stop halfway on this one)
+    (range[11,14,1] , {12;13});
+    ({14} , range[9,13,1]);
+
+    (range[8,9,1], range[12,16,1]);
+
+    // ------ Top Half ----------
+    // Center T (stop halfway on this one)
+    (range[11,14,1] , {24;25});
+    ({14} , range[21,25,1]);
+
+    (range[8,9,1], range[18,25,1]);
+    (range[10,12,1] , {21;22});
+
+    (range[3,6,1], {24;25});
+
+    (range[3,6,1], {27;28;29});
+
+    (range[8,12,1], {27;28;29});
+
+    // Vertical Bump
+    ({14} , range[27,30,1]);
+
+    // ------ Ghost Box ----------
+    (range[11,14,1], {15});
+    (range[11,14,1], {19});
+    ({11}, range[15,grid_h_i-13,1]);
 }
 
 def _wall_i(x,y) = _wall_i_left(x,y) or _wall_i_left(grid_w_i-x+1, y)
@@ -58,7 +88,10 @@ def delete[:dot] = dot
 def insert[:superdot] = _superdot
 def insert[:wall] = _wall
 
-//def
+def ghost_min_x = 9.0
+def ghost_max_x = grid_w_i - 8.0
+def ghost_min_y = 11.0
+def ghost_max_y = grid_h_i - 8.0
 
 def insert[:dot](x,y) =
     range[1.0,grid_w,1.0](x) and range[1.0,grid_h,1.0](y)
@@ -73,11 +106,9 @@ def insert[:dot](x,y) =
             and px > x - 1.0 and px < x + 1.0
             and py > y - 1.0 and py < y + 1.0
         )
-    // // Not any of the squares around ghosts
-    // and not exists(g, gx,gy :
-    //         ghost(g) and
-    //         ghost_x[g](gx) and ghost_y[g](gy)
-    //         and gx > x - 2.0 and gx < x + 2.0
-    //         and gy > y - 2.0 and gy < y + 2.0
-    //     )
+    // Not any of the squares around ghosts
+    and not(
+        x > ghost_min_x and x < ghost_max_x and
+        y > ghost_min_y and y < ghost_max_y
+    )
 
