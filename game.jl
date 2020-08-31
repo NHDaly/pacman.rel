@@ -4,7 +4,7 @@ using DelveSDK
 
 include("gamedisplay.jl")
 
-const conn = LocalConnection(;dbname=:pacman)
+conn = LocalConnection(;dbname=:pacman, port=11224)
 win,ch = init_win()
 
 function init_game(conn)
@@ -23,13 +23,11 @@ function init_game(conn)
     draw_frame(conn)
 end
 function draw_frame(conn)
-    ((w,),), ((h,),) = query(conn, out=(:grid_w, :grid_h))
-    global w,h = w,h
-    #global g = query(conn, "def insert[:tick]=true", out=:display_grid_topdown, readonly=false)
-    global g = query(conn, out=:display_grid_topdown)
+    global ((w,),), ((h,),), g, ((score,),) =
+        query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score))
 
     global ghost_colors = Dict(query(conn, out=:ghost_color))
-    display_grid!(win, w,h, ghost_colors, g)
+    display_grid!(win, w,h, ghost_colors, g, score)
 end
 function update!(conn)
     query(conn, "def insert[:tick]=true", readonly=false)
@@ -105,3 +103,15 @@ result = run(win, """
 
 
 init_game(conn)
+
+
+function runloop(conn, maxframes::Union{Int,Nothing} = nothing)
+    i = 0
+    while true
+        i += 1
+        if maxframes !== nothing && i > maxframes
+            break
+        end
+        update!(conn); draw_frame(conn);
+    end
+end

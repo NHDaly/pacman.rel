@@ -4,7 +4,7 @@ using Electron
 
 
 function init_win()
-    win = Window(URI("file://main.html"))
+    win = Window(Dict(:width => 450, :height => 575))
     load(win, """
         <canvas id="canvas"></canvas>
         <style>
@@ -25,14 +25,16 @@ function init_win()
             const ctx = canvas.getContext("2d");
             let cw = (canvas.width = 400),
             cx = cw / 2;
-            let ch = (canvas.height = 600),
+            let ch = (canvas.height = 500),
             cy = ch / 2;
        </script>
         """)
     return win, msgchannel(win)
 end
 
-function display_grid!(win, g_width, g_height, ghost_colors, g)
+function display_grid!(win, g_width, g_height, ghost_colors, g, score)
+
+    gd = Dict((x,y)=>c for (x,y,c) in g)
 
     # food radius
     elements_str = join([
@@ -40,7 +42,7 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
         {
         // Not sure why, but need to subtract 0.5 from x for it to line up nicely..
         let x = $(x-0.5) * cellw;
-        let y = $(y) * cellw;
+        let y = $(y) * cellw + 30; // shift everything down.
         ctx.beginPath();
         """ *
         if c == '.'
@@ -56,14 +58,40 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
             ctx.fill();
             """
         elseif c == 'W'
+            iswall(x,y) = haskey(gd, (x,y)) && gd[x,y] == 'W'
+            function draw_line(x2, y2)
+                """
+                ctx.strokeStyle = "blue";
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo($x2, $y2);
+                ctx.closePath();
+                ctx.stroke();
+                """
+            end
+
+            out = """
+            ctx.fillStyle = "blue";
+            ctx.fillRect(x-cellw/8, y-cellw/8, cellw/4, cellw/4);
             """
-            ctx.fillStyle = "darkblue";
-            ctx.fillRect(x-cellw/2, y-cellw/2, cellw, cellw);
-            """
+            if iswall(x-1, y)
+                out *= draw_line("x-cellw","y")
+            end
+            if iswall(x+1, y)
+                out *= draw_line("x+cellw","y")
+            end
+            if iswall(x, y-1)
+                out *= draw_line("x","y-cellw")
+            end
+            if iswall(x, y+1)
+                out *= draw_line("x","y+cellw")
+            end
+            out
+
         elseif c == 'P'
             """
-            ctx.arc(x, y, pacman_radius, Math.PI / 4, -Math.PI / 4);
-            ctx.lineTo(x, y);
+            ctx.arc(x, y, pacman_radius, 30 * Math.PI/180, -30 * Math.PI/180);
+            ctx.lineTo(x-0.2*cellw, y);
             ctx.fillStyle = "gold";
             ctx.fill();
             """
@@ -96,6 +124,8 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
         for (x,y,c) in g
     ], "\n")
 
+    score_text = string(Int(score))
+
     result = run(win, """
         {
             // Start by clearing out the previous frame.
@@ -106,11 +136,17 @@ function display_grid!(win, g_width, g_height, ghost_colors, g)
 
             pellet_radius = cellw * 0.15;
             superdot_radius = cellw * 0.4;
-            pacman_radius = cellw * 0.5;
+            pacman_radius = cellw * 0.75;
             ghost_radius = cellw * 2.0;
 
 
             $elements_str
+
+            // Score
+            ctx.fillStyle = 'white';
+            ctx.font = '28px serif';
+            ctx.fillText($(repr(score_text)), 100, 30);
+
         }
         """)
 
