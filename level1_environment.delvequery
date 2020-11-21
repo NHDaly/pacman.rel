@@ -1,5 +1,3 @@
-// TODO: Use ints for dots x,y
-
 def xs = range[1.0, grid_w, 1.0]
 def ys = range[1.0, grid_h, 1.0]
 //def cell(x,y) = xs(x) and ys(y)
