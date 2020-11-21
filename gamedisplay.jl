@@ -32,7 +32,7 @@ function init_win()
     return win, msgchannel(win)
 end
 
-function display_grid!(win, g_width, g_height, ghost_colors, g, score)
+function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives)
 
     gd = Dict((x,y)=>c for (x,y,c) in g)
 
@@ -104,16 +104,16 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score)
             ctx.fillStyle = $(repr(color));
             ctx.beginPath();
             ctx.moveTo(x - r/2, y - r/2);
-            ctx.lineTo(x + 0, y + -14/r);
-            ctx.bezierCurveTo(x + 0, y - 22/r, x + 6/r, y - 28/r, x + 14/r, y - 28/r);
-            ctx.bezierCurveTo(x + 22, y - 28/r, x + 28/r, y - 22/r, x + 28/r, y - 14/r);
-            ctx.lineTo(x + 28, y + 0);
-            ctx.lineTo(x + 23.333, y + -5.333/r);
-            ctx.lineTo(x + 18.666, y + 0/r);
-            ctx.lineTo(x + 14, y + -5.333/r);
-            ctx.lineTo(x + 9.333, y + 0/r);
-            ctx.lineTo(x + 4.666, y + -5.333/r);
-            ctx.lineTo(x + 0, y + 0/r);
+            ctx.lineTo(x + 0, y - -11/r);
+            ctx.bezierCurveTo(x + 0, y - -3/r, x + 6/r, y - 3/r, x + 14/r, y - 3/r);
+            ctx.bezierCurveTo(x + 22, y - 3/r, x + 28/r, y - -3/r, x + 28/r, y - -11/r);
+            ctx.lineTo(x + 28, y + 25);
+            ctx.lineTo(x + 23.333, y + 20.333/r);
+            ctx.lineTo(x + 18.666, y + 25/r);
+            ctx.lineTo(x + 14, y + 20.333/r);
+            ctx.lineTo(x + 9.333, y + 25/r);
+            ctx.lineTo(x + 4.666, y + 20.333/r);
+            ctx.lineTo(x + 0, y + 25/r);
             ctx.fill();
             """
         else
@@ -126,7 +126,8 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score)
         for (x,y,c) in g
     ], "\n")
 
-    score_text = string(Int(score))
+    score_text = "Score: $(Int(score))"
+    lives_text = "Lives: $(Int(lives))"
 
     result = run(win, """
         {
@@ -147,7 +148,12 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score)
             // Score
             ctx.fillStyle = 'white';
             ctx.font = '28px serif';
-            ctx.fillText($(repr(score_text)), 100, 30);
+            ctx.fillText($(repr(score_text)), 80, 30);
+
+            // Lives
+            ctx.fillStyle = 'white';
+            ctx.font = '14px serif';
+            ctx.fillText($(repr(lives_text)), 20, ch-7);
 
         }
         """)

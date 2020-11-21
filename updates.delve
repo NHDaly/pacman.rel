@@ -33,7 +33,7 @@ def computed_new_y_pacman = ((pacman_y + pacman_move_y - 1.0) % grid_h) + 1.0
 
 def valid_move_pacman =
     computed_new_x_pacman(x) and computed_new_y_pacman(y)
-    and not wall(x,y)
+    and not wall(x,y) // and not dead
     from x,y
 
 // ***** On :tick, update positions ***********
@@ -59,3 +59,22 @@ def delete[:score](v) = delete[:dot](_,_) and score(v)
 
 def insert[:score](v) = delete[:superdot](_,_) and v = score+10.0
 def delete[:score](v) = delete[:superdot](_,_) and score(v)
+
+
+// -- Ghosts Interactions -------------------
+/*
+// This still isn't working quite right.. Pacman continues on invisible and eating after death!
+
+def death = tile_occupant[x,y](p) and tile_occupant[x,y](g)
+    from (x,y,p,g) where pacman(p) and ghost(g)
+
+// On a death condition, pacman becomes dead, and stays dead until the level restarts.
+def insert[:dead] = not(dead) and death
+
+def delete[:lives](v) = insert(:dead) and lives(v)
+def insert[:lives](v) = insert(:dead) and v = lives-1
+
+// When pacman dies, remove it from the board
+def delete[:pacman_x] = vs... : insert(:dead) and pacman_x(vs...)
+def delete[:pacman_y] = vs... : insert(:dead) and pacman_y(vs...)
+*/

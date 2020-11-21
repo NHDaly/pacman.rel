@@ -30,7 +30,7 @@ def insert[:ghost_x][g in ghost] = ghost_init_x - (gid - 2.5) from gid where gho
 def insert[:ghost_y][g in ghost] = ghost_init_y
 
 def ghost_init_x = 14.5
-def ghost_init_y = _grid_h/2.0
+def ghost_init_y = _grid_h/2.0 + 1.5
 
 
 // Facing direction
@@ -49,3 +49,6 @@ def insert[:ghost_facing_y][g in ghost] = 1.0
 // Score Keeping
 def delete[:score] = score
 def insert[:score] = 0.0
+
+def delete[:lives] = lives
+def insert[:lives] = 3
