@@ -1,4 +1,4 @@
-// TODO: need this to make inserts work
+// TODO: Without this, we get an arity _warning_ from the defs in updates.delve
 // TODO(1898) remove after fixing issue #1898
 def insert[:dummy] = true
 

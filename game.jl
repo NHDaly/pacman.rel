@@ -1,5 +1,5 @@
 cd(@__DIR__)
-using Pkg; Pkg.activate(homedir()*"/Documents/work/rai/raicode-clean")
+using Pkg; Pkg.activate(homedir()*"/work/raicode-clean")
 using DelveSDK
 
 include("gamedisplay.jl")
