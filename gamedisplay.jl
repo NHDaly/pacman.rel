@@ -88,7 +88,7 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score)
             end
             out
 
-        elseif c == 'P'
+        elseif c == 'ᗧ'
             """
             ctx.arc(x, y, pacman_radius, 30 * Math.PI/180, -30 * Math.PI/180);
             ctx.lineTo(x-0.2*cellw, y);
@@ -116,6 +116,8 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score)
             ctx.lineTo(x + 0, y + 0/r);
             ctx.fill();
             """
+        else
+            error("Unexpected character in grid: $c")
         end *
         """
         }

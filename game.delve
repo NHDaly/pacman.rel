@@ -20,18 +20,10 @@ def ghost_color = {
 
 def ghost(g) = ghost_name(g,_)
 
-// TODO: Couldn't RAIVM w/ existentials for x,y. Is this broken?
-// TODO: Can't RAIVM these together. Is this broken?
-// ic all_ghosts_on_board(g) {
-//     (ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1) from x) and
-//     (ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1) from y)
-// }
-// ic all_ghosts_on_board_x(g,x) {
-//     ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1)
-// }
-// ic all_ghosts_on_board_y(g,y) {
-//     ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
-// }
+ic all_ghosts_on_board(g,x,y) {
+    ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1) and
+    ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
+}
 
 // ---- Walls and Dots --------
 
@@ -73,7 +65,7 @@ def tile_occupant_ghost[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
 //def ghost_display_char[g in ghost] = substring[ghost_name[g], 1,1]
 
 
-def pacman_display_char = 'P'  // Sad, Delve rejected 'ᗧ'
+def pacman_display_char = 'ᗧ'
 def ghost_display_char = {
     1, '1';
     2, '2';
