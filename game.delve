@@ -2,26 +2,30 @@
 // TODO(1898) remove after fixing issue #1898
 def insert[:dummy] = true
 
+// --- PacMan --------------------------------
+
+entity pacman _ = true   // (singleton)
+
 // --- Ghost Configs -------------------------
 // From https://en.wikipedia.org/wiki/Ghosts_(Pac-Man)#Known_ghosts
 
 entity ghost ghost_by_id = {1;2;3;4}
 
-def ghost_name = ghost_by_id[g],n : {
+def ghost_name_by_id = {
     1, "Blinky";  // Chaser
     2, "Pinky";   // Ambusher
     3, "Inky";    // Fickle
     4, "Clide";   // Feigned Ignorance
-}(g,n) from g
-def ghost_color = ghost_by_id[g],c : {
+}
+def ghost_color_by_id = {
     1, "red";
     2, "pink";
     3, "cyan";
     4, "orange";
-}(g,c) from g
+}
 
-ic ghost_config_total(g in ghost) {
-    ghost_name(g,_) and ghost_color(g,_)
+ic ghost_config_total(gid) {
+    ghost_by_id(gid, _) implies ghost_name_by_id(gid,_) and ghost_color_by_id(gid,_)
 }
 
 // Note ghost_x,ghost_y may not yet be defined until the level is initialized
@@ -53,11 +57,8 @@ ic all_ghosts_on_board(g,x,y) {
 
 // Reverse index by tile - players, monster, etc
 // TODO: Once we have specialization this will work! :)
-// def tile_occupant[x,y] = p : pacman[p] and pacman_pos(p, x,y)
-// def tile_occupant[x,y] = m : ghost[m] and ghost_pos(m, x,y)
-
-def tile_occupant_pacman(x,y) = pacman_x(x) and pacman_y(y)
-def tile_occupant_ghost[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
+def tile_occupant[x,y] = p : pacman(p) and pacman_x(x) and pacman_y(y)
+def tile_occupant[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
 
 // ------------------------------------------------------------
 
@@ -79,11 +80,13 @@ def ghost_display_char = ghost_by_id[g],c : {
 }(g,c) from g
 
 def display_grid[x, y](c) =
-    tile_occupant_pacman(x,y) and pacman_display_char(c)
-        or (tile_occupant_ghost(x,y,g) and ghost_display_char[g](c) from g in ghost)
-        or dot(x,y) and c='.'
-        or superdot(x,y) and c='*'
-        or wall(x,y) and c='W'
+    (tile_occupant[x,y](e) and
+           (pacman(e) and pacman_display_char(c))
+        or (ghost(e) and ghost_display_char[e](c))
+        from e)
+    or dot(x,y) and c='.'
+    or superdot(x,y) and c='*'
+    or wall(x,y) and c='W'
 
 // Flip y axis for printing characters!
 def display_grid_topdown[display_x, display_y] =

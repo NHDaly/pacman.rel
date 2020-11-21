@@ -26,7 +26,7 @@ function draw_frame(conn)
     global ((w,),), ((h,),), g, ((score,),) =
         query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score))
 
-    global ghost_colors = Dict(query(conn, out=:ghost_color))
+    global ghost_colors = Dict(query(conn, out=:ghost_color_by_id))
     display_grid!(win, w,h, ghost_colors, g, score)
 end
 function update!(conn)
