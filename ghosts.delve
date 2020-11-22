@@ -1,11 +1,10 @@
 def xs = range[1.0, grid_w, 1.0]
 def ys = range[1.0, grid_h, 1.0]
 
-def decision_point = x,y
-    from x,y where
+def decision_point = x,y :
     xs(x) and ys(y) and
     not wall(x,y) and
-        // Anything that's not a hallway:
+        // Anything that's not a hallway or a corner:
         // (Dead-end tunnels, three-way intersections, and four-way intersections)
         num_paths[x,y] != 2
 
@@ -34,16 +33,39 @@ def path_options[x,y] = x1, y1 :
 
 // ------ Blinky AI ------------
 
-def blinky_x = ghost_pos[blinky][:x]
-def blinky_y = ghost_pos[blinky][:y]
+def blinky_pos = ghost_pos[blinky]
+def blinky_x = blinky_pos[:x]
+def blinky_y = blinky_pos[:y]
+def blinky_facing = ghost_facing[blinky]
 
-def blinky_new_facing =
+def blinky_new_pos =
     if not decision_point[blinky_x, blinky_y] then
-        ghost_facing[blinky]
+        // YIKES! Why is this so complicated looking? I'm just trying to say:
+        //  "go straight unless it's a wall, in which case go down the path you didn't come from"
+        {:x,x; :y,y}
+        from (x,y) where
+            if not wall(next_x, next_y) then
+                // Continue down the hallway
+                x = next_x and y = next_y
+            else
+                // Take the corner path (the path you didn't come from)
+                path_options[blinky_x,blinky_y](x,y) and not (prev_x,prev_y)(x,y)
+            end
+            // Compute the direction already heading
+            from (next_x,next_y, prev_x,prev_y) where
+                next_x = blinky_pos[:x] + blinky_facing[:x] and
+                next_y = blinky_pos[:y] + blinky_facing[:y] and
+                prev_x = blinky_pos[:x] - blinky_facing[:x] and
+                prev_y = blinky_pos[:y] - blinky_facing[:y]
     else  // decision point
         // TODO
-        ghost_facing[blinky]
+        d : blinky_pos[d] + blinky_facing[d]
     end
+
+// TODO: This is probably too obvious to even check, but also it's broken, and it's slow
+// ic hallways_and_corners_not_decision_points(x,y) {
+//     (not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2
+// }
 
 
 // def delete[:ghost_facing] = blinky, vs... : insert(:tick) and ghost_facing[blinky](vs...)
@@ -52,11 +74,11 @@ def blinky_new_facing =
 // def insert[:ghost_facing] = blinky, :y, 0.0
 
 
-def blinky_move = blinky_new_facing
-
 def blinky = ghost_by_id[1]
-def computed_new_pos_ghost[blinky][d] =
-    (ghost_pos[blinky][d] + blinky_move[d] - 1.0) % grid_dim[d] + 1.0
+
+// (includes wrapping via the portals)
+def computed_new_pos_ghost[g,d](v) = g=blinky and v =
+    (blinky_new_pos[d] - 1.0) % grid_dim[d] + 1.0
 
 
 //def delete[:ghost_pos][g in ghost](vs...) = insert(:tick) and ghost_pos[g](vs...)
@@ -64,10 +86,8 @@ def computed_new_pos_ghost[blinky][d] =
 
 // TODO: somehow this deletes _all_ the ghost positions instead of just Blinky
 // I think this is a bug:
-//def delete[:ghost_pos][blinky](vs...) = insert(:tick) and ghost_pos[blinky](vs...)
-//def delete[:ghost_pos] = blinky,vs... : insert(:tick) and ghost_pos[blinky](vs...)
-def delete[:ghost_pos](g,vs...) = g=blinky and insert(:tick) and ghost_pos[blinky](vs...)
-def insert[:ghost_pos](g,vs...) = g=blinky and insert(:tick) and computed_new_pos_ghost[blinky](vs...)
+def delete[:ghost_pos][g in blinky](vs...) = insert(:tick) and ghost_pos[g](vs...)
+def insert[:ghost_pos][g in blinky](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
 
 
 
