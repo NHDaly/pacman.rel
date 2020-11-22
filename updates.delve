@@ -1,9 +1,9 @@
 // --- Debugging -----------------------
 
-// def insert[:deletelog](p, x1) = delete(p, x1)
-// def insert[:deletelog](p, x1,x2) = delete(p, x1,x2)
-// def insert[:deletelog](p, x1,x2,x3) = delete(p, x1,x2,x3)
-// def insert[:deletelog](p, x1,x2,x3,x4) = delete(p, x1,x2,x3,x4)
+// def insert[:deletelog](p, xs...) = delete(p, xs...)
+//
+// // TODO: The vararg insertlog isn't working currently -- needs varargs in fixpoint:
+// // https://github.com/RelationalAI/raicode/issues/3266#issuecomment-731779346
 // def insert[:insertlog](p, x1) = insert(p, x1) and not {:insertlog; :deletelog}(p)
 // def insert[:insertlog](p, x1,x2) = insert(p, x1,x2) and not {:insertlog; :deletelog}(p)
 // def insert[:insertlog](p, x1,x2,x3) = insert(p, x1,x2,x3) and not {:insertlog; :deletelog}(p)
@@ -54,9 +54,6 @@ def valid_move_pacman =
 // Update positions based on pending moves.
 def delete[:pacman_pos](vs...) = insert(:tick) and valid_move_pacman() and pacman_pos(vs...)
 def insert[:pacman_pos](vs...) = insert(:tick) and valid_move_pacman() and computed_new_pos_pacman(vs...)
-
-//def delete[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,_,_) and ghost_pos(m,x,y)
-//def insert[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,x,y)
 
 
 // -- Eating! -------------------------------

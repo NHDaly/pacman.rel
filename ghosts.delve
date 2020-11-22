@@ -83,12 +83,3 @@ def computed_new_pos_ghost[g,d](v) = g=blinky and v =
 def delete[:ghost_pos][g in blinky](vs...) = insert(:tick) and ghost_pos[g](vs...)
 def insert[:ghost_pos][g in blinky](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
 
-
-/*
-// Update positions based on pending moves.
-def delete[:ghost_pos][blinky][:x](v) = insert(:tick) and ghost_pos[blinky][:x](v)
-def delete[:ghost_pos][blinky][:y](v) = insert(:tick) and ghost_pos[blinky][:y](v)
-def insert[:ghost_pos][blinky][:x](v) = insert(:tick) and blinky_new_pos(v)[:x]
-def insert[:ghost_pos][blinky][:y](v) = insert(:tick) and blinky_new_pos(v)[:y]
-
-*/
