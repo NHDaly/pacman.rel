@@ -21,7 +21,7 @@ ic pacman_facing_is_unit_vec(vx,vy) {
         and vx != vy and (vx+vy = 1 or vx+vy = -1)
 }
 ic ghost_facing_is_unit_vec(g,vx,vy) {
-    ghost_facing_x(g, vx) and ghost_facing_y(g, vy) implies
+    ghost_facing[:x](g, vx) and ghost_facing[:y](g, vy) implies
         {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
         and vx != vy and (vx+vy = 1 or vx+vy = -1)
 }
