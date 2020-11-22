@@ -18,6 +18,7 @@ function init_game(conn)
 
     # NOTE: This must come _after_ the level is loaded for now, due to bug.
     install_source(conn, path="updates.delve")
+    install_source(conn, path="ghosts.delve")
 
     @info "--initialized--"
     draw_frame(conn)

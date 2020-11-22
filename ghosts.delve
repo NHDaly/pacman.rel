@@ -1,0 +1,106 @@
+def xs = range[1.0, grid_w, 1.0]
+def ys = range[1.0, grid_h, 1.0]
+
+def decision_point = x,y
+    from x,y where
+    xs(x) and ys(y) and
+    not wall(x,y) and
+        // Anything that's not a hallway:
+        // (Dead-end tunnels, three-way intersections, and four-way intersections)
+        num_paths[x,y] != 2
+
+def display_grid[x, y](c) =
+    decision_point(x,y) and c = 'D'
+
+@inline
+def num_paths[x,y] = 0
+        + if not wall(x+1, y) then 1 else 0 end
+        + if not wall(x,   y+1) then 1 else 0 end
+        + if not wall(x-1, y) then 1 else 0 end
+        + if not wall(x,   y-1) then 1 else 0 end
+
+
+
+/*  The below is broken: https://github.com/RelationalAI/raicode/issues/3265
+
+
+@inline
+def move_towards[ax,ay, bx,by] = ax+x, ay+y
+    from x,y where
+        if abs[dx] > abs[dy] then
+            if not wall(ax+rx, ay) then
+                x=rx and y=0.0
+            else if not wall(ax, ay+ry) then
+                x=0.0 and y=ry
+            else if not wall(ax, ay-ry) then
+                x=0.0 and y=-ry
+            else if not wall(ax-rx, ay) then
+                x=-rx and y=0.0
+            else
+                x=0.0 and y=0.0 // (boxed in)
+            end end end end
+        else // y is bigger
+            if not wall(ax, ay+ry) then
+                x=0.0 and y=ry
+            else if not wall(ax+rx, ay) then
+                x=rx and y=0.0
+            else if not wall(ax-rx, ay) then
+                x=-rx and y=0.0
+            else if not wall(ax, ay-ry) then
+                x=0.0 and y=-ry
+            else
+                x=0.0 and y=0.0 // (boxed in)
+            end end end end
+        end
+
+    from dx,dy, rx, ry
+    where
+        dx = bx - ax and
+        dy = by - ay
+        // (Default to moving bottom-right)
+        and rx = if dx=0.0 then 1.0 else dx/abs[dx] end
+        and ry = if dy=0.0 then 1.0 else dy/abs[dy] end
+
+def chaser = ghost_by_id[1]
+
+ def chaser_new_pos = move_towards[
+     ghost_x[chaser], ghost_y[chaser],
+     pacman_pos[:x], pacman_pos[:y]
+ ]
+
+// Update positions based on pending moves.
+def delete[:ghost_x][chaser](v) = insert(:tick) and ghost_x[chaser](v)
+def delete[:ghost_y][chaser](v) = insert(:tick) and ghost_y[chaser](v)
+def insert[:ghost_x][chaser](v) = insert(:tick) and chaser_new_pos(v)[:x]
+def insert[:ghost_y][chaser](v) = insert(:tick) and chaser_new_pos(v)[:y]
+
+*/
+
+//def chaser_move_direction =
+//    if not wall(cx,cy) then
+//        {:x, cx; :y, cy}
+//    else if
+//    from cx,cy
+//    where
+//        closest_direction[ghost_x[chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:x](cx)
+//        closest_direction[ghost_x[chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:y](cy)
+
+
+// ------ AI ------------------------------------------
+// def xs = range[1.0, grid_w, 1.0]
+// def ys = range[1.0, grid_h, 1.0]
+//
+// entity node node_by_xy = xs,ys
+//
+// def edge(a,b) = node_by_xy(ax,ay,a) and node_by_xy(bx,by,b) and
+//     {1.0; 0.0}(abs[bx - ax]) and
+//     {1.0; 0.0}(abs[by - ay]) and
+//     a != b
+//     from (ax,ay,bx,by)
+//
+// @inline
+// def shortest_path[a, b][d] = edge(a, b) and d = 1
+// @inline
+// def shortest_path[a, b][v] = Min[w: shortest_path(a, b, w) or exists(t: w = shortest_path[a,t] +1 and edge(t, b))](v)
+//
+//

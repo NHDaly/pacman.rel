@@ -51,6 +51,12 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives)
             ctx.fillStyle = "lightyellow";
             ctx.fill();
             """
+        elseif c == 'D'
+            """
+            ctx.arc(x, y, superdot_radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "red";
+            ctx.stroke();
+            """
         elseif c == '*'
             """
             ctx.arc(x, y, superdot_radius, 0, 2 * Math.PI);
