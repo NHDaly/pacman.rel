@@ -8,15 +8,13 @@ def decision_point = x,y :
         // (Dead-end tunnels, three-way intersections, and four-way intersections)
         num_paths[x,y] != 2
 
+// (Temporary) Render the decision points for debugging purposes
+// (Also, it's so cool that we can write into another relation like this! This
+// multiple-predicate-dispatch / multi-body disjuncction thing is pretty cool!)
 def display_grid[x, y](c) =
     decision_point(x,y) and c = 'D'
 
-@inline
-def num_paths[x,y] = 0
-        + if not wall(x+1, y) then 1 else 0 end
-        + if not wall(x,   y+1) then 1 else 0 end
-        + if not wall(x-1, y) then 1 else 0 end
-        + if not wall(x,   y-1) then 1 else 0 end
+@inline def num_paths[x,y] = count[path_options[x,y]]
 
 // NOTE: This must be keyed by (x,y) not a relation {:x,x; :y,y}, because the key is truly
 // a _coordinate_ which needs both values. we could instead make an entity for a cell
@@ -25,11 +23,16 @@ def path_options[x,y] = x1, y1 :
     xs(x) and ys(y) and
     not wall(x,y) and not wall(x1,y1)
         and {
-            x+1, y;
-            x,   y+1;
-            x-1, y+1;
-            x,   y-1;
+            x+1 , y   ;
+            x   , y+1 ;
+            x-1 , y   ;
+            x   , y-1 ;
         }(x1, y1)
+
+ic hallways_and_corners_not_decision_points(x,y) {
+    (not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2
+}
+
 
 // Currently, all ghosts except blinky stay put
 // def computed_new_pos_ghost[g in ghost](vs...) = g != blinky and ghost_pos[g](vs...)
@@ -43,22 +46,22 @@ def blinky_facing = ghost_facing[blinky]
 
 def blinky_prev_pos[d] = blinky_pos[d] - blinky_facing[d]
 
-def blinky_new_pos =
+def blinky_new_pos = {:x,x; :y,y}
+    from (x,y) where
     if not decision_point(blinky_x, blinky_y) then
-        {:x,x; :y,y}
-        from (x,y) where
-            // Continue to the open path that you didn't come from
-            path_options[blinky_x,blinky_y](x,y) and
-                not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y)
+        // Continue to the open path that you didn't come from
+        path_options[blinky_x,blinky_y](x,y) and
+            not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y)
     else  // decision point
-        // TODO
-        d : blinky_pos[d] + blinky_facing[d]
+        blinky_move_towards_pacman(x,y)
     end
 
-// TODO: This is probably too obvious to even check, but also it's broken, and it's slow
-// ic hallways_and_corners_not_decision_points(x,y) {
-//     (not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2
-// }
+def blinky_move_towards_pacman =
+    ArgMin[x,y, mag :
+            path_options[blinky_x,blinky_y](x,y) and
+                not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y) and
+            mag = (pacman_pos[:x] - x)^2 + (pacman_pos[:y] - y)^2
+        ]
 
 
 def delete[:ghost_facing][g in blinky](vs...) = insert(:tick) and ghost_facing[blinky](vs...)
@@ -81,88 +84,11 @@ def delete[:ghost_pos][g in blinky](vs...) = insert(:tick) and ghost_pos[g](vs..
 def insert[:ghost_pos][g in blinky](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
 
 
-
-
-
-/*  The below is broken: https://github.com/RelationalAI/raicode/issues/3265
-
-@inline
-def move_towards[ax,ay, bx,by] = ax+x, ay+y
-    from x,y where
-        if abs[dx] > abs[dy] then
-            if not wall(ax+rx, ay) then
-                x=rx and y=0.0
-            else if not wall(ax, ay+ry) then
-                x=0.0 and y=ry
-            else if not wall(ax, ay-ry) then
-                x=0.0 and y=-ry
-            else if not wall(ax-rx, ay) then
-                x=-rx and y=0.0
-            else
-                x=0.0 and y=0.0 // (boxed in)
-            end end end end
-        else // y is bigger
-            if not wall(ax, ay+ry) then
-                x=0.0 and y=ry
-            else if not wall(ax+rx, ay) then
-                x=rx and y=0.0
-            else if not wall(ax-rx, ay) then
-                x=-rx and y=0.0
-            else if not wall(ax, ay-ry) then
-                x=0.0 and y=-ry
-            else
-                x=0.0 and y=0.0 // (boxed in)
-            end end end end
-        end
-
-    from dx,dy, rx, ry
-    where
-        dx = bx - ax and
-        dy = by - ay
-        // (Default to moving bottom-right)
-        and rx = if dx=0.0 then 1.0 else dx/abs[dx] end
-        and ry = if dy=0.0 then 1.0 else dy/abs[dy] end
-
-def chaser = ghost_by_id[1]
-
- def chaser_new_pos = move_towards[
-     ghost_pos[chaser][:x], ghost_pos[chaser][:y],
-     pacman_pos[:x], pacman_pos[:y]
- ]
-
+/*
 // Update positions based on pending moves.
-def delete[:ghost_pos][chaser][:x](v) = insert(:tick) and ghost_pos[chaser][:x](v)
-def delete[:ghost_pos][chaser][:y](v) = insert(:tick) and ghost_pos[chaser][:y](v)
-def insert[:ghost_pos][chaser][:x](v) = insert(:tick) and chaser_new_pos(v)[:x]
-def insert[:ghost_pos][chaser][:y](v) = insert(:tick) and chaser_new_pos(v)[:y]
+def delete[:ghost_pos][blinky][:x](v) = insert(:tick) and ghost_pos[blinky][:x](v)
+def delete[:ghost_pos][blinky][:y](v) = insert(:tick) and ghost_pos[blinky][:y](v)
+def insert[:ghost_pos][blinky][:x](v) = insert(:tick) and blinky_new_pos(v)[:x]
+def insert[:ghost_pos][blinky][:y](v) = insert(:tick) and blinky_new_pos(v)[:y]
 
 */
-
-//def chaser_move_direction =
-//    if not wall(cx,cy) then
-//        {:x, cx; :y, cy}
-//    else if
-//    from cx,cy
-//    where
-//        closest_direction[ghost_pos[:x][chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:x](cx)
-//        closest_direction[ghost_pos[:x][chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:y](cy)
-
-
-// ------ AI ------------------------------------------
-// def xs = range[1.0, grid_w, 1.0]
-// def ys = range[1.0, grid_h, 1.0]
-//
-// entity node node_by_xy = xs,ys
-//
-// def edge(a,b) = node_by_xy(ax,ay,a) and node_by_xy(bx,by,b) and
-//     {1.0; 0.0}(abs[bx - ax]) and
-//     {1.0; 0.0}(abs[by - ay]) and
-//     a != b
-//     from (ax,ay,bx,by)
-//
-// @inline
-// def shortest_path[a, b][d] = edge(a, b) and d = 1
-// @inline
-// def shortest_path[a, b][v] = Min[w: shortest_path(a, b, w) or exists(t: w = shortest_path[a,t] +1 and edge(t, b))](v)
-//
-//
