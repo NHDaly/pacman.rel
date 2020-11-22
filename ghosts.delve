@@ -18,6 +18,9 @@ def num_paths[x,y] = 0
         + if not wall(x-1, y) then 1 else 0 end
         + if not wall(x,   y-1) then 1 else 0 end
 
+// NOTE: This must be keyed by (x,y) not a relation {:x,x; :y,y}, because the key is truly
+// a _coordinate_ which needs both values. we could instead make an entity for a cell
+// or something, which would also work, but otherwise we must use the two-tuple (x,y)
 def path_options[x,y] = x1, y1 :
     xs(x) and ys(y) and
     not wall(x,y) and not wall(x1,y1)
@@ -38,25 +41,15 @@ def blinky_x = blinky_pos[:x]
 def blinky_y = blinky_pos[:y]
 def blinky_facing = ghost_facing[blinky]
 
+def blinky_prev_pos[d] = blinky_pos[d] - blinky_facing[d]
+
 def blinky_new_pos =
-    if not decision_point[blinky_x, blinky_y] then
-        // YIKES! Why is this so complicated looking? I'm just trying to say:
-        //  "go straight unless it's a wall, in which case go down the path you didn't come from"
+    if not decision_point(blinky_x, blinky_y) then
         {:x,x; :y,y}
         from (x,y) where
-            if not wall(next_x, next_y) then
-                // Continue down the hallway
-                x = next_x and y = next_y
-            else
-                // Take the corner path (the path you didn't come from)
-                path_options[blinky_x,blinky_y](x,y) and not (prev_x,prev_y)(x,y)
-            end
-            // Compute the direction already heading
-            from (next_x,next_y, prev_x,prev_y) where
-                next_x = blinky_pos[:x] + blinky_facing[:x] and
-                next_y = blinky_pos[:y] + blinky_facing[:y] and
-                prev_x = blinky_pos[:x] - blinky_facing[:x] and
-                prev_y = blinky_pos[:y] - blinky_facing[:y]
+            // Continue to the open path that you didn't come from
+            path_options[blinky_x,blinky_y](x,y) and
+                not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y)
     else  // decision point
         // TODO
         d : blinky_pos[d] + blinky_facing[d]
@@ -68,10 +61,8 @@ def blinky_new_pos =
 // }
 
 
-// def delete[:ghost_facing] = blinky, vs... : insert(:tick) and ghost_facing[blinky](vs...)
-//
-// def insert[:ghost_facing] = blinky, :x, 1.0
-// def insert[:ghost_facing] = blinky, :y, 0.0
+def delete[:ghost_facing][g in blinky](vs...) = insert(:tick) and ghost_facing[blinky](vs...)
+def insert[:ghost_facing][g in blinky][d](v) = insert(:tick) and v = blinky_new_pos[d]-blinky_pos[d]
 
 
 def blinky = ghost_by_id[1]
