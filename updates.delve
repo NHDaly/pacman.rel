@@ -1,6 +1,14 @@
-// Moved this to a separate file so that the definitions could come after level is loaded
-// due to bugs in Delve.
-// Also it's probably just good to separate things into files.
+// --- Debugging -----------------------
+
+// def insert[:deletelog](p, x1) = delete(p, x1)
+// def insert[:deletelog](p, x1,x2) = delete(p, x1,x2)
+// def insert[:deletelog](p, x1,x2,x3) = delete(p, x1,x2,x3)
+// def insert[:deletelog](p, x1,x2,x3,x4) = delete(p, x1,x2,x3,x4)
+// def insert[:insertlog](p, x1) = insert(p, x1) and not {:insertlog; :deletelog}(p)
+// def insert[:insertlog](p, x1,x2) = insert(p, x1,x2) and not {:insertlog; :deletelog}(p)
+// def insert[:insertlog](p, x1,x2,x3) = insert(p, x1,x2,x3) and not {:insertlog; :deletelog}(p)
+// def insert[:insertlog](p, x1,x2,x3,x4) = insert(p, x1,x2,x3,x4) and not {:insertlog; :deletelog}(p)
+
 
 // ============================================================
 // === Updates
@@ -21,7 +29,7 @@ ic pacman_facing_is_unit_vec(vx,vy) {
         and vx != vy and (vx+vy = 1 or vx+vy = -1)
 }
 ic ghost_facing_is_unit_vec(g,vx,vy) {
-    ghost_facing[:x](g, vx) and ghost_facing[:y](g, vy) implies
+    ghost_facing[g][:x](vx) and ghost_facing[g][:y](vy) implies
         {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
         and vx != vy and (vx+vy = 1 or vx+vy = -1)
 }

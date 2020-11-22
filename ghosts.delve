@@ -19,10 +19,61 @@ def num_paths[x,y] = 0
         + if not wall(x-1, y) then 1 else 0 end
         + if not wall(x,   y-1) then 1 else 0 end
 
+def path_options[x,y] = x1, y1 :
+    xs(x) and ys(y) and
+    not wall(x,y) and not wall(x1,y1)
+        and {
+            x+1, y;
+            x,   y+1;
+            x-1, y+1;
+            x,   y-1;
+        }(x1, y1)
+
+// Currently, all ghosts except blinky stay put
+// def computed_new_pos_ghost[g in ghost](vs...) = g != blinky and ghost_pos[g](vs...)
+
+// ------ Blinky AI ------------
+
+def blinky_x = ghost_pos[blinky][:x]
+def blinky_y = ghost_pos[blinky][:y]
+
+def blinky_new_facing =
+    if not decision_point[blinky_x, blinky_y] then
+        ghost_facing[blinky]
+    else  // decision point
+        // TODO
+        ghost_facing[blinky]
+    end
+
+
+// def delete[:ghost_facing] = blinky, vs... : insert(:tick) and ghost_facing[blinky](vs...)
+//
+// def insert[:ghost_facing] = blinky, :x, 1.0
+// def insert[:ghost_facing] = blinky, :y, 0.0
+
+
+def blinky_move = blinky_new_facing
+
+def blinky = ghost_by_id[1]
+def computed_new_pos_ghost[blinky][d] =
+    (ghost_pos[blinky][d] + blinky_move[d] - 1.0) % grid_dim[d] + 1.0
+
+
+//def delete[:ghost_pos][g in ghost](vs...) = insert(:tick) and ghost_pos[g](vs...)
+//def insert[:ghost_pos][g in ghost](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
+
+// TODO: somehow this deletes _all_ the ghost positions instead of just Blinky
+// I think this is a bug:
+//def delete[:ghost_pos][blinky](vs...) = insert(:tick) and ghost_pos[blinky](vs...)
+//def delete[:ghost_pos] = blinky,vs... : insert(:tick) and ghost_pos[blinky](vs...)
+def delete[:ghost_pos](g,vs...) = g=blinky and insert(:tick) and ghost_pos[blinky](vs...)
+def insert[:ghost_pos](g,vs...) = g=blinky and insert(:tick) and computed_new_pos_ghost[blinky](vs...)
+
+
+
 
 
 /*  The below is broken: https://github.com/RelationalAI/raicode/issues/3265
-
 
 @inline
 def move_towards[ax,ay, bx,by] = ax+x, ay+y

@@ -42,8 +42,8 @@ def insert[:pacman_facing][:x] = 1.0
 def insert[:pacman_facing][:y] = 0.0
 
 def delete[:ghost_facing][g in ghost] = ghost_facing[g]
-def insert[:ghost_facing][:x][g in ghost] = 0.0
-def insert[:ghost_facing][:y][g in ghost] = 1.0
+def insert[:ghost_facing][g in ghost][:x] = 0.0
+def insert[:ghost_facing][g in ghost][:y] = 1.0
 
 
 
