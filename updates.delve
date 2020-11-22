@@ -34,7 +34,7 @@ def grid_dim = {:x, grid_w;  :y, grid_h}
 // Moving Pacman based on controller input
 
 def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
-//def computed_new_ghost[g in ghost] = ghost_x[g] + ghost_move_x[g], ghost_y + ghost_move_y[g]
+//def computed_new_ghost[g in ghost] = ghost_pos[g][:x] + ghost_move_x[g], ghost_pos[g][:y] + ghost_move_y[g]
 
 def valid_move_pacman =
     computed_new_pos_pacman[:x](x) and computed_new_pos_pacman[:y](y)

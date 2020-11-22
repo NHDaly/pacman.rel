@@ -28,10 +28,10 @@ ic ghost_config_total(gid) {
     ghost_by_id(gid, _) implies ghost_name_by_id(gid,_) and ghost_color_by_id(gid,_)
 }
 
-// Note ghost_x,ghost_y may not yet be defined until the level is initialized
+// Note ghost_pos[:x],ghost_y may not yet be defined until the level is initialized
 ic all_ghosts_on_board(g,x,y) {
-    ghost_x(g, x) implies (x >= 0 and x <= grid_w + 1) and
-    ghost_y(g, y) implies (y >= 0 and y <= grid_h + 1)
+    ghost_pos(g, :x, x) implies (x >= 0 and x <= grid_w + 1) and
+    ghost_pos(g, :y, y) implies (y >= 0 and y <= grid_h + 1)
 }
 
 // ---- Walls and Dots --------
@@ -57,7 +57,7 @@ ic all_ghosts_on_board(g,x,y) {
 
 // Reverse index by tile - players, monster, etc
 def tile_occupant[x,y] = p : pacman(p) and pacman_pos[:x](x) and pacman_pos[:y](y)
-def tile_occupant[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
+def tile_occupant[x,y] = g : ghost(g) and ghost_pos[g][:x](x) and ghost_pos[g][:y](y)
 
 // ------------------------------------------------------------
 

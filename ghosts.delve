@@ -64,15 +64,15 @@ def move_towards[ax,ay, bx,by] = ax+x, ay+y
 def chaser = ghost_by_id[1]
 
  def chaser_new_pos = move_towards[
-     ghost_x[chaser], ghost_y[chaser],
+     ghost_pos[chaser][:x], ghost_pos[chaser][:y],
      pacman_pos[:x], pacman_pos[:y]
  ]
 
 // Update positions based on pending moves.
-def delete[:ghost_x][chaser](v) = insert(:tick) and ghost_x[chaser](v)
-def delete[:ghost_y][chaser](v) = insert(:tick) and ghost_y[chaser](v)
-def insert[:ghost_x][chaser](v) = insert(:tick) and chaser_new_pos(v)[:x]
-def insert[:ghost_y][chaser](v) = insert(:tick) and chaser_new_pos(v)[:y]
+def delete[:ghost_pos][chaser][:x](v) = insert(:tick) and ghost_pos[chaser][:x](v)
+def delete[:ghost_pos][chaser][:y](v) = insert(:tick) and ghost_pos[chaser][:y](v)
+def insert[:ghost_pos][chaser][:x](v) = insert(:tick) and chaser_new_pos(v)[:x]
+def insert[:ghost_pos][chaser][:y](v) = insert(:tick) and chaser_new_pos(v)[:y]
 
 */
 
@@ -82,8 +82,8 @@ def insert[:ghost_y][chaser](v) = insert(:tick) and chaser_new_pos(v)[:y]
 //    else if
 //    from cx,cy
 //    where
-//        closest_direction[ghost_x[chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:x](cx)
-//        closest_direction[ghost_x[chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:y](cy)
+//        closest_direction[ghost_pos[:x][chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:x](cx)
+//        closest_direction[ghost_pos[:x][chaser], ghost_y[chaser], pacman_pos[:x], pacman_pos[:y]][:y](cy)
 
 
 // ------ AI ------------------------------------------
