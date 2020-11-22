@@ -56,7 +56,7 @@ ic all_ghosts_on_board(g,x,y) {
 // --- Game Positioning ---------------------------------------
 
 // Reverse index by tile - players, monster, etc
-def tile_occupant[x,y] = p : pacman(p) and pacman_x(x) and pacman_y(y)
+def tile_occupant[x,y] = p : pacman(p) and pacman_pos[:x](x) and pacman_pos[:y](y)
 def tile_occupant[x,y] = g : ghost(g) and ghost_x(g, x) and ghost_y(g, y)
 
 // ------------------------------------------------------------

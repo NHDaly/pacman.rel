@@ -110,7 +110,7 @@ def insert[:dot](x,y) =
     // be initialized first.
     // Not any of the squares around pacman:
     and not exists(px,py :
-            pacman_x(px) and pacman_y(py)
+            pacman_pos[:x](px) and pacman_pos[:y](py)
             and px > x - 1.0 and px < x + 1.0
             and py > y - 1.0 and py < y + 1.0
         )

@@ -38,30 +38,29 @@ const kUP=1; const kDOWN=2; const kLEFT=3; const kRIGHT=4
 function handle_input!(conn, arrow_key)
     @info "input: $arrow_key"
     q = """
-        def delete[:pacman_facing_x] = pacman_facing_x
-        def delete[:pacman_facing_y] = pacman_facing_y
+        def delete[:pacman_facing] = pacman_facing
     """
 
     if arrow_key == kUP
         query(conn, q * """
-            def insert[:pacman_facing_x] = 0.0
-            def insert[:pacman_facing_y] = 1.0
-        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+            def insert[:pacman_facing][:x] = 0.0
+            def insert[:pacman_facing][:y] = 1.0
+        """, readonly=false)
     elseif arrow_key == kDOWN
         query(conn, q * """
-            def insert[:pacman_facing_x] = 0.0
-            def insert[:pacman_facing_y] = -1.0
-        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+            def insert[:pacman_facing][:x] = 0.0
+            def insert[:pacman_facing][:y] = -1.0
+        """, readonly=false)
     elseif arrow_key == kLEFT
         query(conn, q * """
-            def insert[:pacman_facing_x] = -1.0
-            def insert[:pacman_facing_y] = 0.0
-        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+            def insert[:pacman_facing][:x] = -1.0
+            def insert[:pacman_facing][:y] = 0.0
+        """, readonly=false)
     elseif arrow_key == kRIGHT
         query(conn, q * """
-            def insert[:pacman_facing_x] = 1.0
-            def insert[:pacman_facing_y] = 0.0
-        """, readonly=false, out=[:pacman_facing_x,:pacman_facing_y])
+            def insert[:pacman_facing][:x] = 1.0
+            def insert[:pacman_facing][:y] = 0.0
+        """, readonly=false)
     else
         @error "UNEXPECTED arrow_key: $arrow_key"
     end

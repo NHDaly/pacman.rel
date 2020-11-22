@@ -9,8 +9,14 @@
 // ---------------------------------------
 // Motion!
 
+// TODO: reuse code in the below ICs
+//@inline def is_unit_vector(P) =
+//    P[:x](vx) and P[:y](vy) implies
+//        {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
+//        and vx != vy and (vx+vy = 1 or vx+vy = -1)
+
 ic pacman_facing_is_unit_vec(vx,vy) {
-    pacman_facing_x(vx) and pacman_facing_y(vy) implies
+    pacman_facing[:x](vx) and pacman_facing[:y](vy) implies
         {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
         and vx != vy and (vx+vy = 1 or vx+vy = -1)
 }
@@ -21,37 +27,34 @@ ic ghost_facing_is_unit_vec(g,vx,vy) {
 }
 
 
-def pacman_move_x = pacman_facing_x
-def pacman_move_y = pacman_facing_y
+def pacman_move = pacman_facing
 
+def grid_dim = {:x, grid_w;  :y, grid_h}
 
 // Moving Pacman based on controller input
 
-def computed_new_x_pacman = ((pacman_x + pacman_move_x - 1.0) % grid_w) + 1.0
-def computed_new_y_pacman = ((pacman_y + pacman_move_y - 1.0) % grid_h) + 1.0
+def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
 //def computed_new_ghost[g in ghost] = ghost_x[g] + ghost_move_x[g], ghost_y + ghost_move_y[g]
 
 def valid_move_pacman =
-    computed_new_x_pacman(x) and computed_new_y_pacman(y)
+    computed_new_pos_pacman[:x](x) and computed_new_pos_pacman[:y](y)
     and not wall(x,y) // and not dead
     from x,y
 
 // ***** On :tick, update positions ***********
 
 // Update positions based on pending moves.
-def delete[:pacman_x](v) = insert(:tick) and valid_move_pacman() and pacman_x(v)
-def delete[:pacman_y](v) = insert(:tick) and valid_move_pacman() and pacman_y(v)
-def insert[:pacman_x](v) = insert(:tick) and valid_move_pacman() and computed_new_x_pacman(v)
-def insert[:pacman_y](v) = insert(:tick) and valid_move_pacman() and computed_new_y_pacman(v)
+def delete[:pacman_pos](vs...) = insert(:tick) and valid_move_pacman() and pacman_pos(vs...)
+def insert[:pacman_pos](vs...) = insert(:tick) and valid_move_pacman() and computed_new_pos_pacman(vs...)
 
 //def delete[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,_,_) and ghost_pos(m,x,y)
 //def insert[:ghost_pos](g, x,y) = insert(:tick) and computed_new_ghost_pos(g,x,y)
 
 
 // -- Eating! -------------------------------
-def delete[:dot](x,y) = dot(x,y) and pacman_x(x) and pacman_y(y)
+def delete[:dot](x,y) = dot(x,y) and pacman_pos[:x](x) and pacman_pos[:y](y)
 
-def delete[:superdot](x,y) = superdot(x,y) and pacman_x(x) and pacman_y(y)
+def delete[:superdot](x,y) = superdot(x,y) and pacman_pos[:x](x) and pacman_pos[:y](y)
 
 // Every time we delete a dot, add a point
 def insert[:score](v) = delete[:dot](_,_) and v = score+1.0
@@ -75,6 +78,5 @@ def delete[:lives](v) = insert(:dead) and lives(v)
 def insert[:lives](v) = insert(:dead) and v = lives-1
 
 // When pacman dies, remove it from the board
-def delete[:pacman_x] = vs... : insert(:dead) and pacman_x(vs...)
-def delete[:pacman_y] = vs... : insert(:dead) and pacman_y(vs...)
+def delete[:pacman_pos] = vs... : insert(:dead) and pacman_pos(vs...)
 */
