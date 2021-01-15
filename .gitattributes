@@ -1,3 +1,4 @@
 # Classify our `.delve` files as Scala, because it has decent highlighting! 😅
-*.delve linguist-language=Groovy
+*.delve linguist-language=Scala
+*.delvequery linguist-language=Scala
 
