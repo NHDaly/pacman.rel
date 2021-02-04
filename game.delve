@@ -4,7 +4,7 @@ def insert[:dummy] = true
 
 // --- PacMan --------------------------------
 
-entity pacman _ = true   // (singleton)
+entity Pacman pacman = true   // (singleton)
 
 // --- Ghost Configs -------------------------
 // From https://en.wikipedia.org/wiki/Ghosts_(Pac-Man)#Known_ghosts
