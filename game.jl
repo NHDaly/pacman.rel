@@ -4,7 +4,7 @@ using DelveSDK
 
 include("gamedisplay.jl")
 
-conn = LocalConnection(;dbname=:pacman, port=11224)
+conn = LocalConnection(;dbname=:pacman, port=1121)
 win,ch = init_win()
 
 function init_game(conn)

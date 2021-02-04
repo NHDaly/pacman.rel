@@ -30,7 +30,8 @@ def path_options[x,y] = x1, y1 :
         }(x1, y1)
 
 ic hallways_and_corners_not_decision_points(x,y) {
-    (not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2
+    xs(x) and ys(y) implies  // TODO(BUG): Without this line, it was crashing the TXN (it was invalid delve, but still shouldn't crash)
+    ((not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2)
 }
 
 
@@ -47,7 +48,7 @@ def blinky_facing = ghost_facing[blinky]
 def blinky_prev_pos[d] = blinky_pos[d] - blinky_facing[d]
 
 def blinky_new_pos = {:x,x; :y,y}
-    from (x,y) where
+    from x,y where
     if not decision_point(blinky_x, blinky_y) then
         // Continue to the open path that you didn't come from
         path_options[blinky_x,blinky_y](x,y) and

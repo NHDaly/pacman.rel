@@ -84,7 +84,7 @@ def _wall_i_left = {
 
 def _wall_i(x,y) = _wall_i_left(x,y) or _wall_i_left(grid_w_i-x+1, y)
 
-def _wall = int_float_convert[x], int_float_convert[y] from (x,y) where _wall_i(x,y)
+def _wall = int_float_convert[x], int_float_convert[y] from x,y where _wall_i(x,y)
 
 // clear any old environments if they already exist
 def delete[:wall] = wall

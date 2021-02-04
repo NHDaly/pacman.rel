@@ -74,7 +74,7 @@ def delete[:score](v) = delete[:superdot](_,_) and score(v)
 // This still isn't working quite right.. Pacman continues on invisible and eating after death!
 
 def death = tile_occupant[x,y](p) and tile_occupant[x,y](g)
-    from (x,y,p,g) where pacman(p) and ghost(g)
+    from x,y,p,g where pacman(p) and ghost(g)
 
 // On a death condition, pacman becomes dead, and stays dead until the level restarts.
 def insert[:dead] = not(dead) and death
