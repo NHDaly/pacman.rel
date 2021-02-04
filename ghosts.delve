@@ -38,6 +38,12 @@ ic hallways_and_corners_not_decision_points(x,y) {
 // Currently, all ghosts except blinky stay put
 // def computed_new_pos_ghost[g in ghost](vs...) = g != blinky and ghost_pos[g](vs...)
 
+ic ghosts_have_exactly_one_pos(g) {
+    ghost_pos(g,_,_) implies
+    count[ghost_pos[g][:x]] = 1 and
+    count[ghost_pos[g][:y]] = 1
+}
+
 // ------ Blinky AI ------------
 
 def blinky_pos = ghost_pos[blinky]
