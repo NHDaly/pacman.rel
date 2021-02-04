@@ -64,11 +64,13 @@ def blinky_new_pos = {:x,x; :y,y}
     end
 
 def blinky_move_towards_pacman =
-    ArgMin[x,y, mag :
+    // Pick the best direction to move; break ties arbitrarily.
+    // TODO: a more consistent approach to breaking ties
+    top[1, ArgMin[x,y, mag :
             path_options[blinky_x,blinky_y](x,y) and
                 not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y) and
             mag = (pacman_pos[:x] - x)^2 + (pacman_pos[:y] - y)^2
-        ]
+        ]][1]
 
 
 def delete[:ghost_facing][g in blinky](vs...) = insert(:tick) and ghost_facing[blinky](vs...)
