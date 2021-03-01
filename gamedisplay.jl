@@ -2,22 +2,46 @@ using Pkg
 Pkg.activate(".")
 using Electron
 
+# Previous Attempt:
+# <table id="arrows_table">
+# <tr><td>   </td><td><span id='arrow_up'>⬆️</span></td><td> </td></tr>
+# <tr><td><span id='arrow_left'>️⬅️</span></td><td> </td><td><span id='arrow_right'>️️➡️</span></td></tr>
+# <tr><td> </td><td><span id='arrow_down'>⬇️</span></td><td> </td></tr>
+# </table>
+# span#arrow_left, span#arrow_up, span#arrow_right, span#arrow_down {
+#     display: none;
+# }
+# table#arrows_table {
+#     font-size: xx-large;
+#     color: greenyellow;
+# }
 
 function init_win()
-    win = Window(Dict(:width => 450, :height => 575))
+    win = Window(Dict(:width => 450, :height => 600))
     load(win, """
         <canvas id="canvas"></canvas>
+        <table id="arrows_table">
+            <tr><td><span id='arrow_key'> </span></td></tr>
+        </table>
         <style>
             body {
-            background-color: #222;
-            overflow: hidden;
+                background-color: #222;
+                overflow: hidden;
             }
             canvas {
-            background-color: #000;
-            display: block;
-            position:absolute;
-            margin: auto;
-            top:0;bottom:0;left:0;right:0
+                background-color: #000;
+                display: block;
+                //position:absolute;
+                margin: auto;
+                top:0;bottom:0;left:0;right:0
+            }
+            table #arrow_key {
+                font-size: xx-large;
+                color: greenyellow;
+            }
+            table#arrows_table {
+                float: right;
+                margin-right: 50;
             }
         </style>
         <script>
@@ -27,6 +51,8 @@ function init_win()
             cx = cw / 2;
             let ch = (canvas.height = 500),
             cy = ch / 2;
+
+            const arrow_key_span = document.getElementById("arrow_key");
        </script>
         """)
     return win, msgchannel(win)
@@ -161,6 +187,10 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives)
             ctx.font = '14px serif';
             ctx.fillText($(repr(lives_text)), 20, ch-7);
 
+
+            ///////////////////////////////////
+            // Clear out the arrow-key if it's done being held down
+            arrow_key_span.innerText = ''
         }
         """)
 

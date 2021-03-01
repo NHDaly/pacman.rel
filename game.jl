@@ -105,15 +105,19 @@ result = run(win, """
         let LEFT = 3
         let RIGHT = 4
         if(event.keyCode == 39) {
+            arrow_key_span.innerText = '➡️️'
             sendMessageToJulia(RIGHT);
         }
         else if(event.keyCode == 37) {
+            arrow_key_span.innerText = '⬅️️'
             sendMessageToJulia(LEFT);
         }
         if(event.keyCode == 40) {
+            arrow_key_span.innerText = '⬇️'
             sendMessageToJulia(DOWN);
         }
         else if(event.keyCode == 38) {
+            arrow_key_span.innerText = '⬆️'
             sendMessageToJulia(UP);
         }
     }
