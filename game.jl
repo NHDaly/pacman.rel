@@ -1,10 +1,29 @@
+########################################################################
+# Pacman.delve
+#
+# This file is the main driver for the PacMan game implemented in Delve!
+#
+# To run, simply set DELVE_PATH to a julia project that provides DelveSDK,
+# and include this file, then run frames via `runloop(conn, num_frames)`:
+# ```
+# $ DELVE_PATH=../raicode julia -i game.jl
+# $ julia> runloop(conn, 30)  # run 30 frames of the game
+# ```
+#
+########################################################################
+
+
 cd(@__DIR__)
-using Pkg; Pkg.activate(homedir()*"/work/raicode-clean")
+
+# By default, use my (NHD) personal path to the DelveSDK packages:
+const DELVE_PATH = get(ENV, "DELVE_PATH", homedir()*"/work/raicode-clean")
+
+using Pkg; Pkg.activate(DELVE_PATH)
 using DelveSDK
 
 include("gamedisplay.jl")
 
-conn = LocalConnection(;dbname=:pacman, port=1121)
+conn = LocalConnection(;dbname=:pacman)
 win,ch = init_win()
 
 function init_game(conn)
