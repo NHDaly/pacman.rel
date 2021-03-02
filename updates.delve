@@ -1,14 +1,11 @@
 // --- Debugging -----------------------
 
-// def insert[:deletelog](p, xs...) = delete(p, xs...)
-//
-// // TODO: The vararg insertlog isn't working currently -- needs varargs in fixpoint:
-// // https://github.com/RelationalAI/raicode/issues/3266#issuecomment-731779346
-// def insert[:insertlog](p, x1) = insert(p, x1) and not {:insertlog; :deletelog}(p)
-// def insert[:insertlog](p, x1,x2) = insert(p, x1,x2) and not {:insertlog; :deletelog}(p)
-// def insert[:insertlog](p, x1,x2,x3) = insert(p, x1,x2,x3) and not {:insertlog; :deletelog}(p)
-// def insert[:insertlog](p, x1,x2,x3,x4) = insert(p, x1,x2,x3,x4) and not {:insertlog; :deletelog}(p)
-
+// Uncomment these to enable debugging of all inserts and deletes:
+// def output[:insertlog](p,xs...) = insert(p,xs...)
+// TODO: Deletelog doesn't work for some unknown reason:
+// // def output[:deletelog](p,xs...) = delete(p,xs...)
+// // def insert[:dummy,1,2,3] = ()
+// // def delete[:dummy,1,2,3] = ()
 
 // ============================================================
 // === Updates
@@ -35,14 +32,13 @@ ic ghost_facing_is_unit_vec(g,vx,vy) {
 }
 
 
-def pacman_move = pacman_facing
+def pacman_move = pacman_facing  // e.g. { x: 1,  y: 0 } for moving right
 
 def grid_dim = {:x, grid_w;  :y, grid_h}
 
 // Moving Pacman based on controller input
 
 def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
-//def computed_new_ghost[g in ghost] = ghost_pos[g][:x] + ghost_move_x[g], ghost_pos[g][:y] + ghost_move_y[g]
 
 def valid_move_pacman =
     computed_new_pos_pacman[:x](x) and computed_new_pos_pacman[:y](y)
