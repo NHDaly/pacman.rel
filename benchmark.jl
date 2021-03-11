@@ -1,3 +1,5 @@
+module PacmanBenchmark
+
 using DelveSDK
 using JSON
 using Statistics: mean
@@ -94,3 +96,5 @@ function run_benchmark(conn, num_ticks=30)
 
     return out
 end
+
+end  # module PacmanBenchmark
