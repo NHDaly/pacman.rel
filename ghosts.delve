@@ -73,8 +73,8 @@ def blinky_move_towards_pacman =
         ]][1]
 
 
-def delete[:ghost_facing][g in blinky](vs...) = insert(:tick) and ghost_facing[blinky](vs...)
-def insert[:ghost_facing][g in blinky][d](v) = insert(:tick) and v = blinky_new_pos[d]-blinky_pos[d]
+def delete[:ghost_facing][g in blinky](vs...) = game_tick() and ghost_facing[blinky](vs...)
+def insert[:ghost_facing][g in blinky][d](v) = game_tick() and v = blinky_new_pos[d]-blinky_pos[d]
 
 
 def blinky = ghost_by_id[1]
@@ -84,11 +84,11 @@ def computed_new_pos_ghost[g,d](v) = g=blinky and v =
     (blinky_new_pos[d] - 1.0) % grid_dim[d] + 1.0
 
 
-//def delete[:ghost_pos][g in ghost](vs...) = insert(:tick) and ghost_pos[g](vs...)
-//def insert[:ghost_pos][g in ghost](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
+//def delete[:ghost_pos][g in ghost](vs...) = game_tick() and ghost_pos[g](vs...)
+//def insert[:ghost_pos][g in ghost](vs...) = game_tick() and computed_new_pos_ghost[g](vs...)
 
 // TODO: somehow this deletes _all_ the ghost positions instead of just Blinky
 // I think this is a bug:
-def delete[:ghost_pos][g in blinky](vs...) = insert(:tick) and ghost_pos[g](vs...)
-def insert[:ghost_pos][g in blinky](vs...) = insert(:tick) and computed_new_pos_ghost[g](vs...)
+def delete[:ghost_pos][g in blinky](vs...) = game_tick() and ghost_pos[g](vs...)
+def insert[:ghost_pos][g in blinky](vs...) = game_tick() and computed_new_pos_ghost[g](vs...)
 

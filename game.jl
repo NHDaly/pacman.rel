@@ -24,9 +24,12 @@ using DelveSDK
 include("gamedisplay.jl")
 
 conn = LocalConnection(;dbname=:pacman)
-win,ch = init_win()
 
 function init_game(conn)
+    global win,ch = init_win()
+    connect_window_listener()
+    start_key_listener()
+
     create_database(conn, overwrite=true)
 
     install_source(conn, path="game.delve")
@@ -93,37 +96,36 @@ function start_key_listener()
         end
     end
 end
-start_key_listener()
 
 
-
-result = run(win, """
-    function keyDownHandler(event) {
-        console.log(event);
-        let UP = 1
-        let DOWN = 2
-        let LEFT = 3
-        let RIGHT = 4
-        if(event.keyCode == 39) {
-            arrow_key_span.innerText = '➡️️'
-            sendMessageToJulia(RIGHT);
+function connect_window_listener()
+    result = run(win, """
+        function keyDownHandler(event) {
+            console.log(event);
+            let UP = 1
+            let DOWN = 2
+            let LEFT = 3
+            let RIGHT = 4
+            if(event.keyCode == 39) {
+                arrow_key_span.innerText = '➡️️'
+                sendMessageToJulia(RIGHT);
+            }
+            else if(event.keyCode == 37) {
+                arrow_key_span.innerText = '⬅️️'
+                sendMessageToJulia(LEFT);
+            }
+            if(event.keyCode == 40) {
+                arrow_key_span.innerText = '⬇️'
+                sendMessageToJulia(DOWN);
+            }
+            else if(event.keyCode == 38) {
+                arrow_key_span.innerText = '⬆️'
+                sendMessageToJulia(UP);
+            }
         }
-        else if(event.keyCode == 37) {
-            arrow_key_span.innerText = '⬅️️'
-            sendMessageToJulia(LEFT);
-        }
-        if(event.keyCode == 40) {
-            arrow_key_span.innerText = '⬇️'
-            sendMessageToJulia(DOWN);
-        }
-        else if(event.keyCode == 38) {
-            arrow_key_span.innerText = '⬆️'
-            sendMessageToJulia(UP);
-        }
-    }
-    document.addEventListener('keydown', keyDownHandler, false);
-    """)
-
+        document.addEventListener('keydown', keyDownHandler, false);
+        """)
+end
 
 init_game(conn)
 
