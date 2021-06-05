@@ -58,7 +58,7 @@ function init_win()
     return win, msgchannel(win)
 end
 
-function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives)
+function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives, dying_anim_frame)
 
     gd = Dict((x,y)=>c for (x,y,c) in g)
 
@@ -121,8 +121,9 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives)
             out
 
         elseif c == 'ᗧ'
+            melt = dying_anim_frame === nothing ? 0 : dying_anim_frame * (75/2)
             """
-            ctx.arc(x, y, pacman_radius, 30 * Math.PI/180, -30 * Math.PI/180);
+            ctx.arc(x, y, pacman_radius, $((30+melt) * pi/180), $((-29-melt) * pi/180));
             ctx.lineTo(x-0.2*cellw, y);
             ctx.fillStyle = "gold";
             ctx.fill();

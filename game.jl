@@ -46,11 +46,11 @@ function init_game(conn)
     draw_frame(conn)
 end
 function draw_frame(conn)
-    global ((w,),), ((h,),), g, ((score,),), ((lives,),) =
-        query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives))
+    global ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) =
+        query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives, :dying_anim_frame))
 
     global ghost_colors = Dict(query(conn, out=:ghost_color_by_id))
-    display_grid!(win, w,h, ghost_colors, g, score, lives)
+    display_grid!(win, w,h, ghost_colors, g, score, lives, dying_anim_frame)
 end
 function update!(conn)
     query(conn, "def insert[:tick]=true", readonly=false)
