@@ -1,10 +1,10 @@
 module PacmanBenchmark
 
-using DelveSDK
+using RelationalAI
 using JSON
 using Statistics: mean
 
-conn = LocalConnection(;dbname=:pacman)
+conn = LocalConnection(;dbname=:pacman, port=SERVER_PORT)
 
 """
     run_and_write_benchmark(conn[, num_frames];
@@ -16,45 +16,81 @@ the file path specified by `result_file`.
 function run_and_write_benchmark(conn, num_ticks = 30;
                                  result_file = "pacman_benchmark_results.json")
     out = run_benchmark(conn, num_ticks)
+    write_benchmark_results(out)
+end
 
-    write(result_file, JSON.json(out))
+function write_benchmark_results(results,
+                                 result_file = "pacman_benchmark_results.json")
+    write(result_file, JSON.json(results))
 
     @info "Results written to '$result_file'."
 end
 
 #------------------------------------------------------------------------------------------
-# These functions are copied/modified from pacman.delve/src/game.jl
+# These functions are copied/modified from pacman.rel/src/game.jl
 
 function init_game(conn)
     create_database(conn, overwrite=true)
 
-    install_source(conn, path="game.delve")
+    @info """
+    ---------------- Initializing Database ---------------------------
+    ** NOTE: **
+    Installing definitions is about to emit a bunch of `undefined` definition warnings.
+    These are actually expected, and are part of the user program (pacman)'s initialization,
+    because some of the data isn't loaded yet, so some of the installed relation definitions
+    will depend on relations that don't exist yet. Those are then resolved in the subsequent
+    transactions, which load the data for the game.
 
-    # Initialize the level via these write transaciton queries. Characters must come first.
-    query(conn, read("level1_characters.delvequery", String), readonly=false)
-    query(conn, read("level1_environment.delvequery", String), readonly=false)
+    Please ignore the `undefined` warnings, below.
+    -----------------------------------------------------------------
+    """
 
-    # NOTE: This must come _after_ the level is loaded for now, due to bug.
-    install_source(conn, path="updates.delve")
-    install_source(conn, path="ghosts.delve")
+    cd(@__DIR__) do
+        install_source(conn, path="game.rel")
+
+        # Initialize the level via these write transaciton queries. Characters must come first.
+        query(conn, read("level1_characters.relquery", String), readonly=false)
+        query(conn, read("level1_environment.relquery", String), readonly=false)
+
+        # NOTE: This must come _after_ the level is loaded for now, due to bug.
+        install_source(conn, path="updates.rel")
+        install_source(conn, path="ghosts.rel")
+    end
 end
 
 function update!(conn)
     query(conn, "def insert[:tick]=true", readonly=false)
 end
 function render(conn)
-    query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives, :ghost_color_by_id))
+    outs = query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives, :ghost_color_by_id))
+    print_frame(outs)
+end
+
+function print_frame(frame_relations)
+    ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) = frame_relations
+    grid_dict = Dict((i, j) => c for (i, j, c) in g)
+    for y in 1:h
+        for x in 1:w
+            v = get(grid_dict, (x,y), ' ')
+            v = v === 'D' ? ' ' : v  # don't print Decision points, they're distracting
+            print(v)
+        end
+        println()
+    end
+    println("Score: $score    Lives: $lives     Alive: $dying_anim_frame")
 end
 
 #------------------------------------------------------------------------------------------
 # Benchmarking utilities:
 
 create_record(timed) =
-    (time_s = timed.time, bytes = timed.bytes, gctime_s = timed.gctime)
+    (time_s = timed.time, bytes = timed.bytes, gctime_s = timed.gctime, allocs = Base.gc_alloc_count(timed.gcstats),)
 agg_records(records, op) =
     (time_s = op(getindex.(records, :time_s)),
      bytes = op(getindex.(records, :bytes)),
-     gctime_s = op(getindex.(records, :bytes)))
+     gctime_s = op(getindex.(records, :bytes)),
+     allocs = op(getindex.(records, :allocs)),
+     )
 
 function run_benchmark(conn, num_ticks=30)
     init_record = create_record(@timed init_game(conn))
