@@ -1,7 +1,3 @@
-// TODO: Without this, we get an arity _warning_ from the defs in updates.delve
-// TODO(1898) remove after fixing issue #1898
-def insert[:dummy] = true
-
 // --- PacMan --------------------------------
 
 entity Pacman pacman = true   // (singleton)
@@ -29,7 +25,7 @@ ic ghost_config_total(gid) {
 }
 
 // TODO(BUG): this currently throws an exception aborting evaluation
-//   -- this is a bug in Delve
+//   -- this is a bug in Rel
 // Note ghost_pos[:x],ghost_y may not yet be defined until the level is initialized
 // ic all_ghosts_on_board(g,x,y) {
 //     ghost_pos(g, :x, x) implies (x >= 0 and x <= grid_w + 1) and
@@ -94,7 +90,7 @@ def display_grid_topdown[display_x, display_y] =
     where display_x = x and display_y = grid_h - y + 1
 
 
-// Old version where i was printing the whole grid as a block in delve
+// Old version where i was printing the whole grid as a block in Rel
 //def display_grid[x in range[L,R,1], y in range[B,T,1]] =
 //    if tile_occupant_pacman(x,y) then pacman_display_char
 //    else if tile_occupant_ghost(x,y,_) then ghost_display_char[tile_occupant_ghost[x,y]]

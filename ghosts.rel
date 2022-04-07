@@ -30,7 +30,7 @@ def path_options[x,y] = x1, y1 :
         }(x1, y1)
 
 ic hallways_and_corners_not_decision_points(x,y) {
-    xs(x) and ys(y) implies  // TODO(BUG): Without this line, it was crashing the TXN (it was invalid delve, but still shouldn't crash)
+    xs(x) and ys(y) implies  // TODO(BUG): Without this line, it was crashing the TXN (it was invalid Rel, but still shouldn't crash)
     ((not wall(x,y) and not decision_point(x,y)) implies num_paths[x,y] = 2)
 }
 
@@ -66,7 +66,7 @@ def blinky_new_pos = {:x,x; :y,y}
 def blinky_move_towards_pacman =
     // Pick the best direction to move; break ties arbitrarily.
     // TODO: a more consistent approach to breaking ties
-    top[1, ArgMin[x,y, mag :
+    top[1, argmin[x,y, mag :
             path_options[blinky_x,blinky_y](x,y) and
                 not (blinky_prev_pos[:x], blinky_prev_pos[:y])(x,y) and
             mag = (pacman_pos[:x] - x)^2 + (pacman_pos[:y] - y)^2
@@ -91,4 +91,3 @@ def computed_new_pos_ghost[g,d](v) = g=blinky and v =
 // I think this is a bug:
 def delete[:ghost_pos][g in blinky](vs...) = game_tick() and ghost_pos[g](vs...)
 def insert[:ghost_pos][g in blinky](vs...) = game_tick() and computed_new_pos_ghost[g](vs...)
-
