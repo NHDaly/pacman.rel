@@ -1,9 +1,9 @@
 ########################################################################
-# Pacman.delve
+# Pacman.rel
 #
 # This file is the main driver for the PacMan game implemented in Delve!
 #
-# To run, simply set DELVE_PATH to a julia project that provides DelveSDK,
+# To run, simply set DELVE_PATH to a julia project that provides RelationalAI,
 # and include this file, then run frames via `runloop(conn, num_frames)`:
 # ```
 # $ DELVE_PATH=../raicode julia -i game.jl
@@ -15,11 +15,11 @@
 
 cd(@__DIR__)
 
-# By default, use my (NHD) personal path to the DelveSDK packages:
+# By default, use my (NHD) personal path to the RelationalAI packages:
 const DELVE_PATH = get(ENV, "DELVE_PATH", homedir()*"/work/raicode-clean")
 
 using Pkg; Pkg.activate(DELVE_PATH)
-using DelveSDK
+using RelationalAI
 
 include("gamedisplay.jl")
 
@@ -32,15 +32,15 @@ function init_game(conn)
 
     create_database(conn, overwrite=true)
 
-    install_source(conn, path="game.delve")
+    install_source(conn, path="game.rel")
 
     # Initialize the level via these write transaciton queries. Characters must come first.
-    query(conn, read("level1_characters.delvequery", String), readonly=false)
-    query(conn, read("level1_environment.delvequery", String), readonly=false)
+    query(conn, read("level1_characters.relquery", String), readonly=false)
+    query(conn, read("level1_environment.relquery", String), readonly=false)
 
     # NOTE: This must come _after_ the level is loaded for now, due to bug.
-    install_source(conn, path="updates.delve")
-    install_source(conn, path="ghosts.delve")
+    install_source(conn, path="updates.rel")
+    install_source(conn, path="ghosts.rel")
 
     @info "--initialized--"
     draw_frame(conn)
