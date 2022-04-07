@@ -23,7 +23,9 @@ using RelationalAI
 
 include("gamedisplay.jl")
 
-conn = LocalConnection(;dbname=:pacman)
+mg = ManagementConnection()
+#conn = LocalConnection(;dbname=:pacman)
+conn = CloudConnection(dbname=Symbol("nhd-pacman"), management_conn=mg, compute_name=Symbol("nhd-s"))
 
 function init_game(conn)
     global win,ch = init_win()
