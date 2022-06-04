@@ -4,10 +4,10 @@
 # This file is the main driver for the PacMan game implemented in Delve!
 #
 # To run, simply set DELVE_PATH to a julia project that provides RelationalAI,
-# and include this file, then run frames via `runloop(conn, num_frames)`:
+# and include this file, then run frames via `runloop(config..., num_frames)`:
 # ```
 # $ DELVE_PATH=../raicode julia -i game.jl
-# $ julia> runloop(conn, 30)  # run 30 frames of the game
+# $ julia> runloop(config..., 30)  # run 30 frames of the game
 # ```
 #
 ########################################################################
@@ -15,75 +15,103 @@
 
 cd(@__DIR__)
 
-# By default, use my (NHD) personal path to the RelationalAI packages:
-const DELVE_PATH = get(ENV, "DELVE_PATH", homedir()*"/work/raicode-clean")
-
-using Pkg; Pkg.activate(DELVE_PATH)
-using RelationalAI
-
 include("gamedisplay.jl")
 
-mg = ManagementConnection()
-#conn = LocalConnection(;dbname=:pacman)
-conn = CloudConnection(dbname=Symbol("nhd-pacman"), management_conn=mg, compute_name=Symbol("nhd-s"))
+using RAI
 
-function init_game(conn)
+ctx = RAI.Context(RAI.load_config())
+dbname = "nhd-pacman"
+engine = get(ENV, "RAI_ENGINGE", "nhd-S-2")
+config = (ctx, dbname, engine)
+
+function install_model(config...; path)
+    load_model(config..., Dict(path => read(path, String)))
+end
+
+function init_game(config...)
     global win,ch = init_win()
     connect_window_listener()
     start_key_listener()
 
-    create_database(conn, overwrite=true)
+    create_database(config..., overwrite=true)
+    @info "created database"
 
-    install_source(conn, path="game.rel")
+    exec(config..., """
+        def insert:rel:catalog:model["dummy"] = \"""
+        // HACK: to work around the bug in the Transactions Service sending empty results
+        // always install an output so there's never empty results.
+        def output:__dummy__ = 1
+        \"""
+        """, readonly=false)
+
+    load_model(config..., Dict("game.rel" => read("game.rel", String)))
 
     # Initialize the level via these write transaciton queries. Characters must come first.
-    query(conn, read("level1_characters.relquery", String), readonly=false)
-    query(conn, read("level1_environment.relquery", String), readonly=false)
+    exec(config..., read("level1_characters.relquery", String), readonly=false)
+    exec(config..., read("level1_environment.relquery", String), readonly=false)
 
     # NOTE: This must come _after_ the level is loaded for now, due to bug.
-    install_source(conn, path="updates.rel")
-    install_source(conn, path="ghosts.rel")
+    install_model(config..., path="updates.rel")
+    install_model(config..., path="ghosts.rel")
 
     @info "--initialized--"
-    draw_frame(conn)
+    draw_frame(config...)
 end
-function draw_frame(conn)
-    global ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) =
-        query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives, :dying_anim_frame))
+function draw_frame(config...)
+    global vs = exec(config..., """:grid_w,grid_w; :grid_h,grid_h;
+         :display_grid_topdown,display_grid_topdown; :score,score; :lives,lives;
+         :dying_anim_frame,dying_anim_frame""")
 
-    global ghost_colors = Dict(query(conn, out=:ghost_color_by_id))
+    @show [r[1] for r in vs["results"]]
+
+    global ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) =
+        filter(vs, ":grid_w")[1][2],
+        filter(vs, ":grid_h")[1][2],
+        filter(vs, ":display_grid_topdown")[1][2],
+        filter(vs, ":score")[1][2],
+        filter(vs, ":lives")[1][2],
+        filter(vs, ":dying_anim_frame")[1][2]
+
+    global ghost_colors = Dict(exec(config..., "ghost_color_by_id"))
     display_grid!(win, w,h, ghost_colors, g, score, lives, dying_anim_frame)
 end
-function update!(conn)
-    query(conn, "def insert[:tick]=true", readonly=false)
+function filter(response, key)
+    return [r
+            for (metadata,r)
+            in zip(response["metadata"], response["results"])
+            if metadata.types[2] == key
+           ]
+end
+function update!(config...)
+    exec(config..., "def insert:tick = true", readonly=false)
 end
 
 const kUP=1; const kDOWN=2; const kLEFT=3; const kRIGHT=4
-function handle_input!(conn, arrow_key)
+function handle_input!(config, arrow_key)
     @info "input: $arrow_key"
     q = """
-        def delete[:pacman_facing] = pacman_facing
+        def delete:pacman_facing = pacman_facing
     """
 
     if arrow_key == kUP
-        query(conn, q * """
-            def insert[:pacman_facing][:x] = 0.0
-            def insert[:pacman_facing][:y] = 1.0
+        exec(config..., q * """
+            def insert:pacman_facing:x = 0.0
+            def insert:pacman_facing:y = 1.0
         """, readonly=false)
     elseif arrow_key == kDOWN
-        query(conn, q * """
-            def insert[:pacman_facing][:x] = 0.0
-            def insert[:pacman_facing][:y] = -1.0
+        exec(config..., q * """
+            def insert:pacman_facing:x = 0.0
+            def insert:pacman_facing:y = -1.0
         """, readonly=false)
     elseif arrow_key == kLEFT
-        query(conn, q * """
-            def insert[:pacman_facing][:x] = -1.0
-            def insert[:pacman_facing][:y] = 0.0
+        exec(config..., q * """
+            def insert:pacman_facing:x = -1.0
+            def insert:pacman_facing:y = 0.0
         """, readonly=false)
     elseif arrow_key == kRIGHT
-        query(conn, q * """
-            def insert[:pacman_facing][:x] = 1.0
-            def insert[:pacman_facing][:y] = 0.0
+        exec(config..., q * """
+            def insert:pacman_facing:x = 1.0
+            def insert:pacman_facing:y = 0.0
         """, readonly=false)
     else
         @error "UNEXPECTED arrow_key: $arrow_key"
@@ -94,7 +122,7 @@ function start_key_listener()
         while true
             k = take!(ch)
             # Multiple writes may simply fail, but that's fine! :)
-            Threads.@spawn handle_input!(conn, k)
+            Threads.@spawn handle_input!(config, k)
         end
     end
 end
@@ -129,16 +157,16 @@ function connect_window_listener()
         """)
 end
 
-init_game(conn)
+init_game(config...)
 
 
-function runloop(conn, maxframes::Union{Int,Nothing} = nothing)
+function runloop(config, maxframes::Union{Int,Nothing} = nothing)
     i = 0
     while true
         i += 1
         if maxframes !== nothing && i > maxframes
             break
         end
-        update!(conn); draw_frame(conn);
+        update!(config...); draw_frame(config...);
     end
 end
