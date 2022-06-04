@@ -1,9 +1,9 @@
 // --- Debugging -----------------------
 
 // Uncomment these to enable debugging of all inserts and deletes:
-// def output[:insertlog](p,xs...) = insert(p,xs...)
+// def output:insertlog(p,xs...) = insert(p,xs...)
 // TODO: Deletelog doesn't work for some unknown reason:
-// // def output[:deletelog](p,xs...) = delete(p,xs...)
+// // def output:deletelog(p,xs...) = delete(p,xs...)
 // // def insert[:dummy,1,2,3] = ()
 // // def delete[:dummy,1,2,3] = ()
 
@@ -14,7 +14,7 @@
 // ---------------------------------------
 // Ticks
 //
-// All updates in the game are driven by an `insert[:tick] = true` update query from the
+// All updates in the game are driven by an `insert:tick = true` update query from the
 // game driver. UI events are updated on every `insert(:tick)`, and the game state is
 // updated on `game_tick()` which is the same as `insert(:tick)` except it doesn't progress
 // during "cut scene" animations (like dying).
@@ -26,12 +26,12 @@ def game_tick() = insert(:tick) and not dead and not insert(:dead)
 
 // TODO: reuse code in the below ICs
 //@inline def is_unit_vector(P) =
-//    P[:x](vx) and P[:y](vy) implies
+//    P:x(vx) and P:y(vy) implies
 //        {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
 //        and vx != vy and (vx+vy = 1 or vx+vy = -1)
 
 ic pacman_facing_is_unit_vec(vx,vy) {
-    pacman_facing[:x](vx) and pacman_facing[:y](vy) implies
+    pacman_facing:x(vx) and pacman_facing:y(vy) implies
         {-1.0; 0.0; 1.0}(vx) and {-1.0; 0.0; 1.0}(vy)
         and vx != vy and (vx+vy = 1.0 or vx+vy = -1.0)
 }
@@ -51,7 +51,7 @@ def grid_dim = {:x, grid_w;  :y, grid_h}
 def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
 
 def valid_move_pacman =
-    computed_new_pos_pacman[:x](x) and computed_new_pos_pacman[:y](y)
+    computed_new_pos_pacman:x(x) and computed_new_pos_pacman:y(y)
     and not wall(x,y)
     and not (dead or insert(:dead))
     from x,y
@@ -59,21 +59,21 @@ def valid_move_pacman =
 // ***** On :tick, update positions ***********
 
 // Update positions based on pending moves.
-def delete[:pacman_pos](vs...) = game_tick() and valid_move_pacman() and pacman_pos(vs...)
-def insert[:pacman_pos](vs...) = game_tick() and valid_move_pacman() and computed_new_pos_pacman(vs...)
+def delete:pacman_pos(vs...) = game_tick() and valid_move_pacman() and pacman_pos(vs...)
+def insert:pacman_pos(vs...) = game_tick() and valid_move_pacman() and computed_new_pos_pacman(vs...)
 
 
 // -- Eating! -------------------------------
-def delete[:dot](x,y) = dot(x,y) and pacman_pos[:x](x) and pacman_pos[:y](y)
+def delete:dot(x,y) = dot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
 
-def delete[:superdot](x,y) = superdot(x,y) and pacman_pos[:x](x) and pacman_pos[:y](y)
+def delete:superdot(x,y) = superdot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
 
 // Every time we delete a dot, add a point
-def insert[:score](v) = delete[:dot](_,_) and v = score+1.0
-def delete[:score](v) = delete[:dot](_,_) and score(v)
+def insert:score(v) = delete:dot(_,_) and v = score+1.0
+def delete:score(v) = delete:dot(_,_) and score(v)
 
-def insert[:score](v) = delete[:superdot](_,_) and v = score+10.0
-def delete[:score](v) = delete[:superdot](_,_) and score(v)
+def insert:score(v) = delete:superdot(_,_) and v = score+10.0
+def delete:score(v) = delete:superdot(_,_) and score(v)
 
 
 // -- Ghosts Interactions -------------------
@@ -84,20 +84,20 @@ def death = tile_occupant[x,y](p) and tile_occupant[x,y](g)
 // TOOD: this isn't working:
 //// Also kill pacman if he and a ghost swap places (move through eachother)
 //def death = tile_occupant[px,py](p) and tile_occupant[gx,gy](g)
-//    and insert[:tile_occupant][gx,gy](p) and insert[:tile_occupant][px,py](g)
+//    and insert:tile_occupant[gx,gy](p) and insert:tile_occupant[px,py](g)
 //    from px,py,gx,gy,p,g where pacman(p) and ghost(g)
 
 // On a death condition, pacman becomes dead, and stays dead until the level restarts.
-def insert[:dead] = not(dead) and death
+def insert:dead = not(dead) and death
 
 // TODO: Use this dying_anim_countdown hitting 0 to restart the level! :)
 // (This will require switching back to using logic to set / reset the initial level state)
-def insert[:dying_anim_countdown](4) = not(dead)
+def insert:dying_anim_countdown(4) = not(dead)
 
-def insert[:dying_anim_countdown](v) = insert(:tick) and dead and v=dying_anim_countdown - 1 , dying_anim_countdown > 0
-def delete[:dying_anim_countdown](v) = insert(:tick) and dead and v=dying_anim_countdown
+def insert:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown - 1 , dying_anim_countdown > 0
+def delete:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown
 
 def dying_anim_frame = 4 - dying_anim_countdown
 
-def delete[:lives](v) = insert(:dead) and lives(v)
-def insert[:lives](v) = insert(:dead) and v = lives-1
+def delete:lives(v) = insert(:dead) and lives(v)
+def insert:lives(v) = insert(:dead) and v = lives-1

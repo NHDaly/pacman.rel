@@ -54,7 +54,7 @@ ic ghost_config_total(gid) {
 // --- Game Positioning ---------------------------------------
 
 // Reverse index by tile - players, monster, etc
-def tile_occupant[x,y] = p : pacman(p) and pacman_pos[:x](x) and pacman_pos[:y](y)
+def tile_occupant[x,y] = p : pacman(p) and pacman_pos:x(x) and pacman_pos:y(y)
 def tile_occupant[x,y] = g : ghost(g) and ghost_pos[g][:x](x) and ghost_pos[g][:y](y)
 
 // ------------------------------------------------------------
