@@ -47,10 +47,11 @@ function init_game(conn)
 
     cd(@__DIR__) do
         install_source(conn, path="game.rel")
+        install_source(conn, path="level1_characters.rel")
+        install_source(conn, path="level1_environment.rel")
 
         # Initialize the level via these write transaciton queries. Characters must come first.
-        query(conn, read("level1_characters.relquery", String), readonly=false)
-        query(conn, read("level1_environment.relquery", String), readonly=false)
+        query(conn, "def insert:init_level = 1", readonly=false)
 
         # NOTE: This must come _after_ the level is loaded for now, due to bug.
         install_source(conn, path="updates.rel")

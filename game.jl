@@ -1,7 +1,7 @@
 ########################################################################
 # Pacman.rel
 #
-# This file is the main driver for the PacMan game implemented in Delve!
+# This file is the main driver for the PacMan game implemented in Rel!
 #
 # To run, simply set DELVE_PATH to a julia project that provides RelationalAI,
 # and include this file, then run frames via `runloop(config..., num_frames)`:
@@ -45,10 +45,11 @@ function init_game(config...)
         """, readonly=false)
 
     load_model(config..., Dict("game.rel" => read("game.rel", String)))
+    install_model(config..., path="level1_characters.rel")
+    install_model(config..., path="level1_environment.rel")
 
     # Initialize the level via these write transaciton queries. Characters must come first.
-    exec(config..., read("level1_characters.relquery", String), readonly=false)
-    exec(config..., read("level1_environment.relquery", String), readonly=false)
+    exec(config..., "def insert:init_level = 1", readonly=false)
 
     # NOTE: This must come _after_ the level is loaded for now, due to bug.
     install_model(config..., path="updates.rel")
