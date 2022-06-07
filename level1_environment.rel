@@ -1,5 +1,8 @@
-def xs = range[1.0, grid_w, 1.0]
-def ys = range[1.0, grid_h, 1.0]
+// NOTE:
+// Uses `init_l(1)`, defined in level1_characters.delve
+
+def xs = range[1.0, l1_grid_w, 1.0]
+def ys = range[1.0, l1_grid_h, 1.0]
 
 def _superdot = {
     2.0, 28.0   ;
@@ -11,14 +14,14 @@ def _superdot = {
 
 // Top and Bottom rows are all walls
 def _wall = x,1.0    from x in xs
-def _wall = x,grid_h from x in xs
+def _wall = x,l1_grid_h from x in xs
 
 // Left and Right columns are all walls except tunnel
 def _wall = 1.0,y    from y in ys where not 17.0 = y
-def _wall = grid_w,y from y in ys where not 17.0 = y
+def _wall = l1_grid_w,y from y in ys where not 17.0 = y
 
-def grid_w_i = float_int_convert[grid_w]
-def grid_h_i = float_int_convert[grid_h]
+def grid_w_i = float_int_convert[l1_grid_w]
+def grid_h_i = float_int_convert[l1_grid_h]
 
 // Just do the left half
 def _wall_i_left = {
@@ -87,21 +90,23 @@ def _wall_i(x,y) = _wall_i_left(x,y) or _wall_i_left(grid_w_i-x+1, y)
 def _wall = int_float_convert[x], int_float_convert[y] from x,y where _wall_i(x,y)
 
 // clear any old environments if they already exist
-def delete[:wall] = wall
-def delete[:superdot] = superdot
-def delete[:dot] = dot
+def delete[:wall] = wall,  init_l(1)
+def delete[:superdot] = superdot,  init_l(1)
+def delete[:dot] = dot,  init_l(1)
 
 // Insert new ones
-def insert[:superdot] = _superdot
-def insert[:wall] = _wall
+def insert[:superdot] = _superdot,  init_l(1)
+def insert[:wall] = _wall,  init_l(1)
 
 def ghost_min_x = 9.0
 def ghost_max_x = grid_w_i - 8.0
 def ghost_min_y = 11.0
 def ghost_max_y = grid_h_i - 8.0
 
-def insert[:dot](x,y) =
-    range[1.0,grid_w,1.0](x) and range[1.0,grid_h,1.0](y)
+def l1_pacman_pos(d,v) = insert[:pacman_pos](d,v),  init_l(1)
+
+def insert[:dot](x,y) = init_l(1) and
+    range[1.0,l1_grid_w,1.0](x) and range[1.0,l1_grid_h,1.0](y)
     and not _wall(x,y)
     and not _superdot(x, y)
 
@@ -109,7 +114,7 @@ def insert[:dot](x,y) =
     // be initialized first.
     // Not any of the squares around pacman:
     and not exists(px,py :
-            pacman_pos[:x](px) and pacman_pos[:y](py)
+            l1_pacman_pos[:x](px) and l1_pacman_pos[:y](py)
             and px > x - 1.0 and px < x + 1.0
             and py > y - 1.0 and py < y + 1.0
         )
