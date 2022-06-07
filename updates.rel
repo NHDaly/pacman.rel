@@ -97,7 +97,9 @@ def insert:dying_anim_countdown(4) = not(dead)
 def insert:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown - 1 , dying_anim_countdown > 0
 def delete:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown
 
-def dying_anim_frame = 4 - dying_anim_countdown
+def dying_anim_frame = 4 - dying_anim_countdown  <++ 4  // default to fully gone
+
+// TODO: Restart the game after death :)
 
 def delete:lives(v) = insert(:dead) and lives(v)
 def insert:lives(v) = insert(:dead) and v = lives-1
