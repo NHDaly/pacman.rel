@@ -62,8 +62,6 @@ function draw_frame(config...)
          :display_grid_topdown,display_grid_topdown; :score,score; :lives,lives;
          :dying_anim_frame,dying_anim_frame""")
 
-    @show [r[1] for r in vs["results"]]
-
     global ((w,),) = filter(vs, ":grid_w")[1]
     global ((h,),) = filter(vs, ":grid_h")[1]
     global g = filter(vs, ":display_grid_topdown")[1]
