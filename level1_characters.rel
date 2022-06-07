@@ -10,6 +10,11 @@ def delete[p](oldvals...) = p(oldvals...)
 // Use this to trigger all the inserts and deletes below, by issuing an update txn
 // with e.g. `insert[:init_level] = 1`.
 def init_l(l) = insert[:init_level](l)
+def insert[:current_level](l) = insert[:init_level](l)
+
+// Characters are set on reset_level or init_level, whereas environment only on init_level
+def reset_l(l) = insert[:reset_level]() and current_level(l)
+def init_or_reset_l(l) = init_l(l) or reset_l(l)
 
 
 // (Note the boundary is walls)
@@ -22,17 +27,18 @@ def insert[:grid_h] = l1_grid_h,  init_l(1)
 
 
 // Install edbs for pacman pos
-def delete[:pacman_pos] = pacman_pos,  init_l(1)
-def insert[:pacman_pos] = { :x, 14.0;  :y, 8.0 },  init_l(1)
-def insert[:dead] = false  // no-op, but prevents undef compile errors
+def delete[:pacman_pos] = pacman_pos,  init_or_reset_l(1)
+def insert[:pacman_pos] = { :x, 14.0;  :y, 8.0 },  init_or_reset_l(1)
+def insert[:dead] = false                     // no-op, but prevents undef compile errors
+def delete[:dead] = true, init_or_reset_l(1)
 
 // All the ghosts start in the cage, in the middle (except blinky)
-def delete[:ghost_pos] = ghost_pos,  init_l(1)
-def insert[:ghost_pos][g in ghost][:x] = ghost_init_x - (gid - 2.5) from gid where ghost_by_id(gid,g) and init_l(1)
-def insert[:ghost_pos][g in ghost][:y] = ghost_init_y, g != blinky  and init_l(1)
+def delete[:ghost_pos] = ghost_pos,  init_or_reset_l(1)
+def insert[:ghost_pos][g in ghost][:x] = ghost_init_x - (gid - 2.5) from gid where ghost_by_id(gid,g) and init_or_reset_l(1)
+def insert[:ghost_pos][g in ghost][:y] = ghost_init_y, g != blinky  and init_or_reset_l(1)
 
 // start blinky in the middle, out of the cage!
-def insert[:ghost_pos][g in blinky][:y] = ghost_init_y + 3.0,  init_l(1)
+def insert[:ghost_pos][g in blinky][:y] = ghost_init_y + 3.0,  init_or_reset_l(1)
 
 def blinky = ghost_by_id[1]
 
@@ -42,13 +48,13 @@ def ghost_init_y = l1_grid_h/2.0 + 1.5
 
 // Facing direction
 
-def delete[:pacman_facing] = pacman_facing,  init_l(1)
-def insert[:pacman_facing][:x] = 1.0,  init_l(1)
-def insert[:pacman_facing][:y] = 0.0,  init_l(1)
+def delete[:pacman_facing] = pacman_facing,  init_or_reset_l(1)
+def insert[:pacman_facing][:x] = 1.0,  init_or_reset_l(1)
+def insert[:pacman_facing][:y] = 0.0,  init_or_reset_l(1)
 
-def delete[:ghost_facing][g in ghost] = ghost_facing[g],  init_l(1)
-def insert[:ghost_facing][g in ghost][:x] = 1.0,  init_l(1)
-def insert[:ghost_facing][g in ghost][:y] = 0.0,  init_l(1)
+def delete[:ghost_facing][g in ghost] = ghost_facing[g],  init_or_reset_l(1)
+def insert[:ghost_facing][g in ghost][:x] = 1.0,  init_or_reset_l(1)
+def insert[:ghost_facing][g in ghost][:y] = 0.0,  init_or_reset_l(1)
 
 
 
