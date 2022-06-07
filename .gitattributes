@@ -1,4 +1,4 @@
-# Classify our `.delve` files as Scala, because it has decent highlighting! 😅
-*.delve linguist-language=Scala
-*.delvequery linguist-language=Scala
+# Classify our `.rel` files as Scala, because it has decent highlighting! 😅
+*.rel linguist-language=Scala
+*.relquery linguist-language=Scala
 
