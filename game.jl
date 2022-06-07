@@ -64,19 +64,20 @@ function draw_frame(config...)
 
     @show [r[1] for r in vs["results"]]
 
-    global ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) =
-        filter(vs, ":grid_w")[1][2],
-        filter(vs, ":grid_h")[1][2],
-        filter(vs, ":display_grid_topdown")[1][2],
-        filter(vs, ":score")[1][2],
-        filter(vs, ":lives")[1][2],
-        filter(vs, ":dying_anim_frame")[1][2]
+    global ((w,),) = filter(vs, ":grid_w")[1]
+    global ((h,),) = filter(vs, ":grid_h")[1]
+    global g = filter(vs, ":display_grid_topdown")[1]
+    global ((score,),) = filter(vs, ":score")[1]
+    global ((lives,),) = filter(vs, ":lives")[1]
+    global ((dying_anim_frame,),) = filter(vs, ":dying_anim_frame")[1]
 
-    global ghost_colors = Dict(exec(config..., "ghost_color_by_id"))
+    global ghost_colors = Dict(zip(filter(
+        exec(config..., ":ghost_colors, ghost_color_by_id"), ":ghost_colors")[1]...))
+
     display_grid!(win, w,h, ghost_colors, g, score, lives, dying_anim_frame)
 end
 function filter(response, key)
-    return [r
+    return [r[2]
             for (metadata,r)
             in zip(response["metadata"], response["results"])
             if metadata.types[2] == key
