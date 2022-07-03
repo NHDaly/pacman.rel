@@ -20,7 +20,7 @@ def insert[:grid_h] = _grid_h
 
 // Install edbs for pacman pos
 def delete[:pacman_pos] = pacman_pos
-def insert[:pacman_pos] = { :x, 14.0;  :y, 8.0 }
+def insert[:pacman_pos] = ^Point2D[14.0, 8.0]
 def insert[:dead] = false  // no-op, but prevents undef compile errors
 
 // All the ghosts start in the middle

@@ -44,7 +44,8 @@ function init_game(config...)
     #     \"""
     #     """, readonly=false)
 
-    load_model(config..., Dict("game.rel" => read("game.rel", String)))
+    install_model(config..., path="geometry.rel")
+    install_model(config..., path="game.rel")
 
     # Initialize the level via these write transaciton queries. Characters must come first.
     exec(config..., read("level1_characters.relquery", String), readonly=false)

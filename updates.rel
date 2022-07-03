@@ -48,7 +48,10 @@ def grid_dim = {:x, grid_w;  :y, grid_h}
 
 // Moving Pacman based on controller input
 
-def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
+//def computed_new_pos_pacman[D] = (pacman_pos.D + pacman_move.D - 1.0) % grid_dim.D + 1.0
+//def computed_new_pos_pacman[d] = (pacman_pos[d] + pacman_move[d] - 1.0) % grid_dim[d] + 1.0
+def computed_new_pos_pacman:x = (pacman_pos.x + pacman_move:x - 1.0) % grid_dim:x + 1.0
+def computed_new_pos_pacman:y = (pacman_pos.y + pacman_move:y - 1.0) % grid_dim:y + 1.0
 
 def valid_move_pacman =
     computed_new_pos_pacman:x(x) and computed_new_pos_pacman:y(y)
@@ -60,13 +63,13 @@ def valid_move_pacman =
 
 // Update positions based on pending moves.
 def delete:pacman_pos(vs...) = game_tick() and valid_move_pacman() and pacman_pos(vs...)
-def insert:pacman_pos(vs...) = game_tick() and valid_move_pacman() and computed_new_pos_pacman(vs...)
+def insert:pacman_pos(v) = game_tick() and valid_move_pacman() and v = ^Value2D[computed_new_pos_pacman:x, computed_new_pos_pacman:x]
 
 
 // -- Eating! -------------------------------
-def delete:dot(x,y) = dot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
+def delete:dot(dx,dy) = dot(dx,dy) and pacman_pos.x(dx) and pacman_pos.y(dy)
 
-def delete:superdot(x,y) = superdot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
+def delete:superdot(dx,dy) = superdot(dx,dy) and pacman_pos.x(dx) and pacman_pos.y(dy)
 
 // Every time we delete a dot, add a point
 def insert:score(v) = delete:dot(_,_) and v = score+1.0
@@ -99,7 +102,7 @@ def delete:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_cou
 
 def dying_anim_frame = 4 - dying_anim_countdown  <++ 4  // default to fully gone
 
-// TODO: Restart the game after death :)
+// TODO(#1): Restart the game after death :)
 
 def delete:lives(v) = insert(:dead) and lives(v)
 def insert:lives(v) = insert(:dead) and v = lives-1

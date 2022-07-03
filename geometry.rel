@@ -1,0 +1,3 @@
+value type Point2D = Float, Float
+def x[p in Point2D](v) = ^Point2D[v,_](p)
+def y[p in Point2D](v) = ^Point2D[_,v](p)

@@ -69,7 +69,7 @@ def blinky_move_towards_pacman =
     top[1, argmin[x,y, mag :
             path_options[blinky_x,blinky_y](x,y) and
                 not (blinky_prev_pos:x, blinky_prev_pos:y)(x,y) and
-            mag = (pacman_pos:x - x)^2 + (pacman_pos:y - y)^2
+            mag = (pacman_pos.x - x)^2 + (pacman_pos.y - y)^2
         ]][1]
 
 
