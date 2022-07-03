@@ -24,13 +24,11 @@ ic ghost_config_total(gid) {
     ghost_by_id(gid, _) implies ghost_name_by_id(gid,_) and ghost_color_by_id(gid,_)
 }
 
-// TODO(BUG): this currently throws an exception aborting evaluation
-//   -- this is a bug in Rel
 // Note ghost_pos may not yet be defined until the level is initialized
-// ic all_ghosts_on_board(g,x,y) {
-//     ghost_pos(g, :x, x) implies (x >= 0 and x <= grid_w + 1) and
-//     ghost_pos(g, :y, y) implies (y >= 0 and y <= grid_h + 1)
-// }
+ic all_ghosts_on_board(g, px, py) {
+    ghost_pos[g].y = py implies (px >= 0 and px <= grid_w + 1) and
+    ghost_pos[g].x = px implies (py >= 0 and py <= grid_h + 1)
+}
 
 // ---- Walls and Dots --------
 
