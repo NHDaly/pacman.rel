@@ -25,10 +25,12 @@ def insert[:dead] = false  // no-op, but prevents undef compile errors
 
 // All the ghosts start in the middle
 def delete[:ghost_pos] = ghost_pos
-def insert[:ghost_pos][g in ghost][:x] = ghost_init_x - (gid - 2.5) from gid where ghost_by_id(gid,g)
-def insert[:ghost_pos][g in ghost][:y](v) = v=ghost_init_y and g != blinky
-
-def insert[:ghost_pos] = blinky, :y, ghost_init_y + 3.0  // start blinky out of the cage!
+def _ghost_pos_x[g in ghost] = ghost_init_x - (gid - 2.5) from gid where ghost_by_id(gid,g)
+def _ghost_pos_y[g in ghost](v) = v=ghost_init_y and g != blinky
+def _ghost_pos_y = blinky, ghost_init_y + 3.0  // start blinky out of the cage!
+def insert[:ghost_pos][g in ghost] {
+    ^Point2D[_ghost_pos_x[g], _ghost_pos_y[g]]
+}
 
 def blinky = ghost_by_id[1]
 

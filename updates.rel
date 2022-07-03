@@ -21,6 +21,10 @@
 
 def game_tick() = insert(:tick) and not dead and not insert(:dead)
 
+// Note: we can't forward declare dead, since it's a boolean EDB, and this would violate the
+// current rules that a definition can't have both EDB facts and IDB facts.
+// def dead = false
+
 // ---------------------------------------
 // Motion!
 

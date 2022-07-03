@@ -26,7 +26,7 @@ ic ghost_config_total(gid) {
 
 // TODO(BUG): this currently throws an exception aborting evaluation
 //   -- this is a bug in Rel
-// Note ghost_pos[:x],ghost_y may not yet be defined until the level is initialized
+// Note ghost_pos may not yet be defined until the level is initialized
 // ic all_ghosts_on_board(g,x,y) {
 //     ghost_pos(g, :x, x) implies (x >= 0 and x <= grid_w + 1) and
 //     ghost_pos(g, :y, y) implies (y >= 0 and y <= grid_h + 1)
@@ -55,7 +55,7 @@ ic ghost_config_total(gid) {
 
 // Reverse index by tile - players, monster, etc
 def tile_occupant[px,py] = p : pacman(p) and pacman_pos.x(px) and pacman_pos.y(py)
-def tile_occupant[x,y] = g : ghost(g) and ghost_pos[g][:x](x) and ghost_pos[g][:y](y)
+def tile_occupant[px,py] = g : ghost(g) and ghost_pos[g].x(px) and ghost_pos[g].y(py)
 
 // ------------------------------------------------------------
 
