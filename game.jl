@@ -21,7 +21,7 @@ using RAI
 
 ctx = RAI.Context(RAI.load_config())
 dbname = "nhd-pacman"
-engine = get(ENV, "RAI_ENGINGE", "nhd-S-2")
+engine = get(ENV, "RAI_ENGINE", "nhd-S")
 config = (ctx, dbname, engine)
 
 function install_model(config...; path)
@@ -36,13 +36,13 @@ function init_game(config...)
     create_database(config..., overwrite=true)
     @info "created database"
 
-    exec(config..., """
-        def insert:rel:catalog:model["dummy"] = \"""
-        // HACK: to work around the bug in the Transactions Service sending empty results
-        // always install an output so there's never empty results.
-        def output:__dummy__ = 1
-        \"""
-        """, readonly=false)
+    # exec(config..., """
+    #     def insert:rel:catalog:model["dummy"] = \"""
+    #     // HACK: to work around the bug in the Transactions Service sending empty results
+    #     // always install an output so there's never empty results.
+    #     def output:__dummy__ = 1
+    #     \"""
+    #     """, readonly=false)
 
     load_model(config..., Dict("game.rel" => read("game.rel", String)))
 

@@ -1,27 +1,30 @@
 module PacmanBenchmark
 
-using RelationalAI
-using JSON
+using RAI
+using JSON3
 using Statistics: mean
 
-conn = LocalConnection(;dbname=:pacman, port=SERVER_PORT)
+ctx = RAI.Context(RAI.load_config())
+dbname = "nhd-pacman-benchmark"
+engine = get(ENV, "RAI_ENGINE", "nhd-S")
+config = (ctx, dbname, engine)
 
 """
-    run_and_write_benchmark(conn[, num_frames];
+    run_and_write_benchmark(config[, num_frames];
                             result_file = "pacman_benchmark_results.json")
 
 Run the pacman benchmark for `num_frames` frames, and write the result as a JSON file to
 the file path specified by `result_file`.
 """
-function run_and_write_benchmark(conn, num_ticks = 30;
+function run_and_write_benchmark(config, num_ticks = 30;
                                  result_file = "pacman_benchmark_results.json")
-    out = run_benchmark(conn, num_ticks)
+    out = run_benchmark(config, num_ticks)
     write_benchmark_results(out)
 end
 
 function write_benchmark_results(results,
                                  result_file = "pacman_benchmark_results.json")
-    write(result_file, JSON.json(results))
+    JSON3.write(result_file, results)
 
     @info "Results written to '$result_file'."
 end
@@ -29,8 +32,12 @@ end
 #------------------------------------------------------------------------------------------
 # These functions are copied/modified from pacman.rel/src/game.jl
 
-function init_game(conn)
-    create_database(conn, overwrite=true)
+function install_model(config...; path)
+    load_model(config..., Dict(path => read(path, String)))
+end
+
+function init_game(config)
+    create_database(config..., overwrite=true)
 
     @info """
     ---------------- Initializing Database ---------------------------
@@ -46,29 +53,44 @@ function init_game(conn)
     """
 
     cd(@__DIR__) do
-        install_source(conn, path="game.rel")
+        install_model(config..., path="game.rel")
 
         # Initialize the level via these write transaciton queries. Characters must come first.
-        query(conn, read("level1_characters.relquery", String), readonly=false)
-        query(conn, read("level1_environment.relquery", String), readonly=false)
+        exec(config..., read("level1_characters.relquery", String), readonly=false)
+        exec(config..., read("level1_environment.relquery", String), readonly=false)
 
         # NOTE: This must come _after_ the level is loaded for now, due to bug.
-        install_source(conn, path="updates.rel")
-        install_source(conn, path="ghosts.rel")
+        install_model(config..., path="updates.rel")
+        install_model(config..., path="ghosts.rel")
     end
 end
 
-function update!(conn)
-    query(conn, "def insert[:tick]=true", readonly=false)
+function filter(response, key)
+    return [r[2]
+            for (metadata,r)
+            in zip(response["metadata"], response["results"])
+            if metadata.types[2] == key
+           ]
 end
-function render(conn)
-    outs = query(conn, out=(:grid_w, :grid_h, :display_grid_topdown, :score, :lives, :ghost_color_by_id))
+function update!(config)
+    exec(config..., "def insert:tick = true", readonly=false)
+end
+function render(config)
+    global outs = exec(config..., """:grid_w,grid_w; :grid_h,grid_h;
+         :display_grid_topdown,display_grid_topdown; :score,score; :lives,lives;
+         :dying_anim_frame,dying_anim_frame""")
     print_frame(outs)
 end
 
-function print_frame(frame_relations)
-    ((w,),), ((h,),), g, ((score,),), ((lives,),), ((dying_anim_frame,),) = frame_relations
-    grid_dict = Dict((i, j) => c for (i, j, c) in g)
+function print_frame(vs)
+    global ((w,),) = filter(vs, ":grid_w")[1]
+    global ((h,),) = filter(vs, ":grid_h")[1]
+    global g = filter(vs, ":display_grid_topdown")[1]
+    global ((score,),) = filter(vs, ":score")[1]
+    global ((lives,),) = filter(vs, ":lives")[1]
+    global ((dying_anim_frame,),) = filter(vs, ":dying_anim_frame")[1]
+    g = zip(g...)
+    grid_dict = Dict((x, y) => c for (x, y, c) in g)
     for y in 1:h
         for x in 1:w
             v = get(grid_dict, (x,y), ' ')
@@ -92,8 +114,8 @@ agg_records(records, op) =
      allocs = op(getindex.(records, :allocs)),
      )
 
-function run_benchmark(conn, num_ticks=30)
-    init_record = create_record(@timed init_game(conn))
+function run_benchmark(config = config, num_ticks=30)
+    init_record = create_record(@timed init_game(config))
 
     VT = Vector{typeof(init_record)}
     update_times, render_times, frame_times = VT(), VT(), VT()
@@ -101,8 +123,8 @@ function run_benchmark(conn, num_ticks=30)
     for i in 1:num_ticks
         @info "frame $i:"
         f = @timed begin
-            u = @timed update!(conn)
-            r = @timed render(conn)
+            u = @timed update!(config)
+            r = @timed render(config)
         end
         push!(update_times, create_record(u))
         push!(render_times, create_record(r))
