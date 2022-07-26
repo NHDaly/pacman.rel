@@ -1,4 +1,4 @@
-# pacman.delve
+# pacman.rel
 
 An implementation of PacMan, written in Rel
 
