@@ -21,11 +21,11 @@ using RAI
 
 ctx = RAI.Context(RAI.load_config())
 dbname = "nhd-pacman"
-engine = get(ENV, "RAI_ENGINE", "nhd-S")
+engine = get(ENV, "RAI_ENGINE", "nhd-s")
 config = (ctx, dbname, engine)
 
 function install_model(config...; path)
-    load_model(config..., Dict(path => read(path, String)))
+    load_models(config..., Dict(path => read(path, String)))
 end
 
 function init_game(config...)
@@ -33,7 +33,11 @@ function init_game(config...)
     connect_window_listener()
     start_key_listener()
 
-    create_database(config..., overwrite=true)
+    try
+        delete_database(config...)
+    catch
+    end
+    create_database(config...)
     @info "created database"
 
     # exec(config..., """
@@ -44,7 +48,11 @@ function init_game(config...)
     #     \"""
     #     """, readonly=false)
 
-    load_model(config..., Dict("game.rel" => read("game.rel", String)))
+    load_models(config..., Dict(
+        path => read(path, String)
+        for path in ("game.rel", "ghosts.rel", "updates.rel")
+    ))
+    install_model(config..., path="game.rel")
 
     # Initialize the level via these write transaciton queries. Characters must come first.
     exec(config..., read("level1_characters.relquery", String), readonly=false)
@@ -57,29 +65,39 @@ function init_game(config...)
     @info "--initialized--"
     draw_frame(config...)
 end
+function filter(response, key)
+    return [r[2]
+            for (metadata,r)
+            in zip(response.metadata.relations, response.results)
+            if _relname(metadata.relation_id) == key
+           ]
+end
+function _relname(relation_id)
+    if !(length(relation_id.arguments) >= 2 && relation_id.arguments[2].tag == RAI.relationalai.protocol.Kind.CONSTANT_TYPE)
+        return nothing
+    end
+    top_level_name = String(copy(relation_id.arguments[1].constant_type.value.arguments[1].value.value))
+    top_level_name == "output" || return nothing
+    relname = String(copy(relation_id.arguments[2].constant_type.value.arguments[1].value.value))
+    return relname
+end
 function draw_frame(config...)
     global vs = exec(config..., """:grid_w,grid_w; :grid_h,grid_h;
          :display_grid_topdown,display_grid_topdown; :score,score; :lives,lives;
          :dying_anim_frame,dying_anim_frame""")
 
-    global ((w,),) = filter(vs, ":grid_w")[1]
-    global ((h,),) = filter(vs, ":grid_h")[1]
-    global g = filter(vs, ":display_grid_topdown")[1]
-    global ((score,),) = filter(vs, ":score")[1]
-    global ((lives,),) = filter(vs, ":lives")[1]
-    global ((dying_anim_frame,),) = filter(vs, ":dying_anim_frame")[1]
+    global ((w,),) = filter(vs, "grid_w")[1]
+    global ((h,),) = filter(vs, "grid_h")[1]
+    global g = filter(vs, "display_grid_topdown")[1]
+    global ((score,),) = filter(vs, "score")[1]
+    global ((lives,),) = filter(vs, "lives")[1]
+    #global ((dying_anim_frame,),) = filter(vs, ":dying_anim_frame")[1]
+    global dying_anim_frame = 0
 
     global ghost_colors = Dict(zip(filter(
-        exec(config..., ":ghost_colors, ghost_color_by_id"), ":ghost_colors")[1]...))
+        exec(config..., ":ghost_colors, ghost_color_by_id"), "ghost_colors")[1]...))
 
     display_grid!(win, w,h, ghost_colors, g, score, lives, dying_anim_frame)
-end
-function filter(response, key)
-    return [r[2]
-            for (metadata,r)
-            in zip(response["metadata"], response["results"])
-            if metadata.types[2] == key
-           ]
 end
 function update!(config...)
     exec(config..., "def insert:tick = true", readonly=false)

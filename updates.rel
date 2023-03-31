@@ -11,6 +11,23 @@
 // === Updates
 // ============================================================
 
+// TODO: figure out what all bounds we need to achieve separate compilation
+bound dead = true
+bound insert:dead = true
+bound insert:tick = true
+bound dot = Float, Float
+bound score = Float
+bound lives = Int
+
+bound pacman_facing = :x,Float; :y,Float
+// TODO: somehow this causes issues
+// bound ghost_facing = ghost, {:x,Float; :y,Float}
+
+// TODO: Should we do better than this?
+bound delete
+bound insert
+
+
 // ---------------------------------------
 // Ticks
 //

@@ -1,11 +1,23 @@
+bound pacman_pos = {:x,Float; :y,Float}
+// TODO: somehow this causes issues
+// bound ghost_pos = ghost, {:x,Float; :y,Float}
+bound dot = Float,Float
+bound superdot = Float,Float
+bound wall = Float,Float
+bound grid_w = Float
+bound grid_h = Float
+
 // --- PacMan --------------------------------
 
-entity Pacman pacman = true   // (singleton)
+entity type Pacman = true   // (singleton)
+def pacman = ^Pacman[]
 
 // --- Ghost Configs -------------------------
 // From https://en.wikipedia.org/wiki/Ghosts_(Pac-Man)#Known_ghosts
 
-entity ghost ghost_by_id = {1;2;3;4}
+entity type Ghost = {1;2;3;4}
+def ghost_by_id[i] = ^Ghost[i]
+def ghost = ^Ghost[_]
 
 def ghost_name_by_id = {
     1, "Blinky";  // Chaser
