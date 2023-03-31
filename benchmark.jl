@@ -32,36 +32,18 @@ end
 #------------------------------------------------------------------------------------------
 # These functions are copied/modified from pacman.rel/src/game.jl
 
-function install_model(config...; path)
-    load_models(config..., Dict(path => read(path, String)))
-end
-
 function init_game(config)
     create_database(config..., overwrite=true)
 
-    @info """
-    ---------------- Initializing Database ---------------------------
-    ** NOTE: **
-    Installing definitions is about to emit a bunch of `undefined` definition warnings.
-    These are actually expected, and are part of the user program (pacman)'s initialization,
-    because some of the data isn't loaded yet, so some of the installed relation definitions
-    will depend on relations that don't exist yet. Those are then resolved in the subsequent
-    transactions, which load the data for the game.
-
-    Please ignore the `undefined` warnings, below.
-    -----------------------------------------------------------------
-    """
-
     cd(@__DIR__) do
-        install_model(config..., path="game.rel")
+        load_models(config..., Dict(
+            path => read(path, String)
+            for path in ("game.rel", "ghosts.rel", "updates.rel")
+        ))
 
         # Initialize the level via these write transaciton queries. Characters must come first.
         exec(config..., read("level1_characters.relquery", String), readonly=false)
         exec(config..., read("level1_environment.relquery", String), readonly=false)
-
-        # NOTE: This must come _after_ the level is loaded for now, due to bug.
-        install_model(config..., path="updates.rel")
-        install_model(config..., path="ghosts.rel")
     end
 end
 

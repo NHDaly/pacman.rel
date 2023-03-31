@@ -24,10 +24,6 @@ dbname = "nhd-pacman"
 engine = get(ENV, "RAI_ENGINE", "nhd-s")
 config = (ctx, dbname, engine)
 
-function install_model(config...; path)
-    load_models(config..., Dict(path => read(path, String)))
-end
-
 function init_game(config...)
     global win,ch = init_win()
     connect_window_listener()
@@ -40,27 +36,14 @@ function init_game(config...)
     create_database(config...)
     @info "created database"
 
-    # exec(config..., """
-    #     def insert:rel:catalog:model["dummy"] = \"""
-    #     // HACK: to work around the bug in the Transactions Service sending empty results
-    #     // always install an output so there's never empty results.
-    #     def output:__dummy__ = 1
-    #     \"""
-    #     """, readonly=false)
-
     load_models(config..., Dict(
         path => read(path, String)
         for path in ("game.rel", "ghosts.rel", "updates.rel")
     ))
-    install_model(config..., path="game.rel")
 
     # Initialize the level via these write transaciton queries. Characters must come first.
     exec(config..., read("level1_characters.relquery", String), readonly=false)
     exec(config..., read("level1_environment.relquery", String), readonly=false)
-
-    # NOTE: This must come _after_ the level is loaded for now, due to bug.
-    install_model(config..., path="updates.rel")
-    install_model(config..., path="ghosts.rel")
 
     @info "--initialized--"
     draw_frame(config...)
