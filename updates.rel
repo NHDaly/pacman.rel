@@ -11,21 +11,21 @@
 // === Updates
 // ============================================================
 
-// TODO: figure out what all bounds we need to achieve separate compilation
-bound dead = true
-bound insert:dead = true
-bound insert:tick = true
-bound dot = Float, Float
-bound score = Float
-bound lives = Int
+// // TODO: figure out what all bounds we need to achieve separate compilation
+// bound dead = true
+// bound insert:dead = true
+// bound insert:tick = true
+// bound dot = Float, Float
+// bound score = Float
+// bound lives = Int
 
-bound pacman_facing = :x,Float; :y,Float
-// TODO: somehow this causes issues
-// bound ghost_facing = ghost, {:x,Float; :y,Float}
+// bound pacman_facing = :x,Float; :y,Float
+// // TODO: somehow this causes issues
+// // bound ghost_facing = ghost, {:x,Float; :y,Float}
 
-// TODO: Should we do better than this?
-bound delete
-bound insert
+// // TODO: Should we do better than this?
+// bound delete
+// bound insert
 
 
 // ---------------------------------------
@@ -86,30 +86,29 @@ def delete:dot(x,y) = dot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
 def delete:superdot(x,y) = superdot(x,y) and pacman_pos:x(x) and pacman_pos:y(y)
 
 // Every time we delete a dot, add a point
-def insert:score(v) = delete:dot(_,_) and v = score+1.0
-def delete:score(v) = delete:dot(_,_) and score(v)
+def insert:score = score+1.0, exists(delete:dot)
+def delete:score = score, exists(delete:dot)
 
-def insert:score(v) = delete:superdot(_,_) and v = score+10.0
-def delete:score(v) = delete:superdot(_,_) and score(v)
+def insert:score = score+10.0, exists(delete:superdot)
+def delete:score = score, exists(delete:superdot)
 
 
 // -- Ghosts Interactions -------------------
 // This still isn't working quite right.. Pacman continues on invisible and eating after death!
 
-def death = tile_occupant[x,y](p) and tile_occupant[x,y](g)
-    from x,y,p,g where pacman(p) and ghost(g)
+def should_die = exists(x,y : tile_occupant[x,y] = pacman and tile_occupant[x,y] = ghost)
 // TOOD: this isn't working:
 //// Also kill pacman if he and a ghost swap places (move through eachother)
-//def death = tile_occupant[px,py](p) and tile_occupant[gx,gy](g)
+//def should_die = tile_occupant[px,py](p) and tile_occupant[gx,gy](g)
 //    and insert:tile_occupant[gx,gy](p) and insert:tile_occupant[px,py](g)
 //    from px,py,gx,gy,p,g where pacman(p) and ghost(g)
 
-// On a death condition, pacman becomes dead, and stays dead until the level restarts.
-def insert:dead = not(dead) and death
+// On a should_die condition, pacman becomes dead, and stays dead until the level restarts.
+def insert:dead = not(dead) and should_die
 
 // TODO: Use this dying_anim_countdown hitting 0 to restart the level! :)
 // (This will require switching back to using logic to set / reset the initial level state)
-def insert:dying_anim_countdown(4) = not(dead)
+def insert:dying_anim_countdown(4) = not(dead) and should_die
 
 def insert:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown - 1 , dying_anim_countdown > 0
 def delete:dying_anim_countdown(v) = insert(:tick) and dead and v=dying_anim_countdown

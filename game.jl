@@ -24,17 +24,20 @@ dbname = "nhd-pacman"
 engine = get(ENV, "RAI_ENGINE", "nhd-s")
 config = (ctx, dbname, engine)
 
-function init_game(config...)
+function init_game(config...; reset_db = true)
     global win,ch = init_win()
     connect_window_listener()
     start_key_listener()
 
-    try
-        delete_database(config...)
-    catch
+    if reset_db
+        try
+            create_database(ctx, dbname)
+        catch
+            delete_database(ctx, dbname)
+            create_database(ctx, dbname)
+        end
+        @info "created database"
     end
-    create_database(config...)
-    @info "created database"
 
     load_models(config..., Dict(
         path => read(path, String)
@@ -157,7 +160,7 @@ function connect_window_listener()
         """)
 end
 
-init_game(config...)
+#init_game(config...)
 
 
 function runloop(config, maxframes::Union{Int,Nothing} = nothing)

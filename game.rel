@@ -1,11 +1,11 @@
-bound pacman_pos = {:x,Float; :y,Float}
-// TODO: somehow this causes issues
-// bound ghost_pos = ghost, {:x,Float; :y,Float}
-bound dot = Float,Float
-bound superdot = Float,Float
-bound wall = Float,Float
-bound grid_w = Float
-bound grid_h = Float
+// bound pacman_pos = {:x,Float; :y,Float}
+// // TODO: somehow this causes issues
+// // bound ghost_pos = ghost, {:x,Float; :y,Float}
+// bound dot = Float,Float
+// bound superdot = Float,Float
+// bound wall = Float,Float
+// bound grid_w = Float
+// bound grid_h = Float
 
 // --- PacMan --------------------------------
 
