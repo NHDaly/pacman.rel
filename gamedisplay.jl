@@ -61,7 +61,7 @@ end
 function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives, dying_anim_frame)
 
     g = zip(g...)
-    gd = Dict((x,y)=>c for (x,y,c) in g)
+    gd = Dict((x,y)=>Char(c) for (x,y,c) in g)
 
     # food radius
     elements_str = join([
@@ -157,7 +157,7 @@ function display_grid!(win, g_width, g_height, ghost_colors, g, score, lives, dy
         }
         """
 
-        for (x,y,c) in g
+        for ((x,y),c) in gd
     ], "\n")
 
     score_text = "Score: $(Int(score))"

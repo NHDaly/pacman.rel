@@ -6,7 +6,7 @@ using Statistics: mean
 
 ctx = RAI.Context(RAI.load_config())
 dbname = "nhd-pacman-benchmark"
-engine = get(ENV, "RAI_ENGINE", "nhd-S")
+engine = get(ENV, "RAI_ENGINE", "nhd-s")
 config = (ctx, dbname, engine)
 
 """
@@ -32,45 +32,36 @@ end
 #------------------------------------------------------------------------------------------
 # These functions are copied/modified from pacman.rel/src/game.jl
 
-function install_model(config...; path)
-    load_model(config..., Dict(path => read(path, String)))
-end
-
 function init_game(config)
     create_database(config..., overwrite=true)
 
-    @info """
-    ---------------- Initializing Database ---------------------------
-    ** NOTE: **
-    Installing definitions is about to emit a bunch of `undefined` definition warnings.
-    These are actually expected, and are part of the user program (pacman)'s initialization,
-    because some of the data isn't loaded yet, so some of the installed relation definitions
-    will depend on relations that don't exist yet. Those are then resolved in the subsequent
-    transactions, which load the data for the game.
-
-    Please ignore the `undefined` warnings, below.
-    -----------------------------------------------------------------
-    """
-
     cd(@__DIR__) do
-        install_model(config..., path="game.rel")
+        load_models(config..., Dict(
+            path => read(path, String)
+            for path in ("game.rel", "ghosts.rel", "updates.rel")
+        ))
 
         # Initialize the level via these write transaciton queries. Characters must come first.
         exec(config..., read("level1_characters.relquery", String), readonly=false)
         exec(config..., read("level1_environment.relquery", String), readonly=false)
-
-        # NOTE: This must come _after_ the level is loaded for now, due to bug.
-        install_model(config..., path="updates.rel")
-        install_model(config..., path="ghosts.rel")
     end
 end
 
 function filter(response, key)
     return [r[2]
             for (metadata,r)
-            in zip(response["metadata"], response["results"])
-            if metadata.types[2] == key
+            in zip(response.metadata.relations, response.results)
+            if _relname(metadata.relation_id) == key
            ]
+end
+function _relname(relation_id)
+    if !(length(relation_id.arguments) >= 2 && relation_id.arguments[2].tag == RAI.relationalai.protocol.Kind.CONSTANT_TYPE)
+        return nothing
+    end
+    top_level_name = String(copy(relation_id.arguments[1].constant_type.value.arguments[1].value.value))
+    top_level_name == "output" || return nothing
+    relname = String(copy(relation_id.arguments[2].constant_type.value.arguments[1].value.value))
+    return relname
 end
 function update!(config)
     exec(config..., "def insert:tick = true", readonly=false)
@@ -83,14 +74,15 @@ function render(config)
 end
 
 function print_frame(vs)
-    global ((w,),) = filter(vs, ":grid_w")[1]
-    global ((h,),) = filter(vs, ":grid_h")[1]
-    global g = filter(vs, ":display_grid_topdown")[1]
-    global ((score,),) = filter(vs, ":score")[1]
-    global ((lives,),) = filter(vs, ":lives")[1]
-    global ((dying_anim_frame,),) = filter(vs, ":dying_anim_frame")[1]
+    global ((w,),) = filter(vs, "grid_w")[1]
+    global ((h,),) = filter(vs, "grid_h")[1]
+    global g = filter(vs, "display_grid_topdown")[1]
+    global ((score,),) = filter(vs, "score")[1]
+    global ((lives,),) = filter(vs, "lives")[1]
+    dying_anim_frame = 0
+    # global ((dying_anim_frame,),) = filter(vs, "dying_anim_frame")[1]
     g = zip(g...)
-    grid_dict = Dict((x, y) => c for (x, y, c) in g)
+    grid_dict = Dict((x, y) => Char(c) for (x, y, c) in g)
     for y in 1:h
         for x in 1:w
             v = get(grid_dict, (x,y), ' ')
